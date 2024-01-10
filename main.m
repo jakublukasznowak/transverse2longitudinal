@@ -1,7 +1,7 @@
 
 % Select plane: ATR, C130 or TO
 
-plane = 'TO';
+plane = 'ATR';
 
 
 % Prepare paths
@@ -27,7 +27,7 @@ end
 % https://observations.ipsl.fr/aeris/eurec4a-data/AIRCRAFT/ATR/SAFIRE-TURB/PROCESSED/
 % 
 % In this code 'longlegs' L3 v1.9 is used.
-% 'EPSILON_TKE'
+%
 %
 % MYDATAPATH/C130/TURBULENCE
 % 
@@ -63,7 +63,7 @@ end
 
 if strcmp(plane,'ATR')
     
-    fitting_range = [16 80];
+    fit_range = [16 80];
     
     % List of levels
     levels  = {'cloud-base','top-subcloud','mid-subcloud','near-surface'};
@@ -93,7 +93,7 @@ if strcmp(plane,'ATR')
     
 elseif strcmp(plane,'C130')
     
-    fitting_range = [16 80];
+    fit_range = [16 80];
     
     % List of levels
     levels  = {'in-cloud','cloud-base','sub-cloud'};
@@ -125,7 +125,7 @@ elseif strcmp(plane,'C130')
     
 elseif strcmp(plane,'TO')
     
-    fitting_range = [8 80];
+    fit_range = [8 80];
     
     % List of levels
     levels  = {'cloud-top','cloud-base','sub-cloud','near-surface'};
@@ -190,5 +190,75 @@ plot_seg_overview(MOM,levels);
 title(plane)
 
 
+%%
 
+% Constants
+
+B_L = 2.0; B_T = 2.6;
+C_L = 0.5; C_T = 0.66;
+
+% Settings
+
+sfc_method = "logmean";
+sfc_fit_points = 6;
+
+psd_method = "logmean";
+psd_fit_points = 6;
+psd_win_length = 1000; % m
+psd_win_overlap = 500; % m
+
+vars = {'W','UX','VY'};
+B = [B_T B_L B_T];
+C = [C_T C_L C_T];
+
+Nvar = numel(vars);
+
+
+% Example
+
+ex_s = 32;
+
+i_s = ex_s;
+dr = MOM.dr(i_s);
+
+for i_v = 1:Nvar
+    var = vars{i_v};
+    
+    edr_sfc( detrend(TURB(i_s).(var)), dr,fit_range,B(i_v),'Method',sfc_method,...
+        'FitPoints',sfc_fit_points,'Plot',true,'PlotRange',[dr 1000] );
+    
+    title(join([plane,MOM.flight(i_s),round(MOM.alt(i_s)),'m',var]))
+    print(gcf,join([[plotpath,filesep,'ex'],plane,'sfc',var,string(i_s)],'_'),'-dpng','-r300')
+end
+
+for i_v = 1:Nvar
+    var = vars{i_v};
+    
+    edr_psd( detrend(TURB(i_s).(var)), dr,fit_range,B(i_v),'Method',psd_method,...
+        'FitPoints',psd_fit_points,'Plot',true,'PlotRange',[2*dr 1000],...
+        'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
+    
+    title(join([plane,MOM.flight(i_s),round(MOM.alt(i_s)),'m',var]))
+    print(gcf,join([[plotpath,filesep,'ex'],plane,'psd',var,string(i_s)],'_'),'-dpng','-r300')
+end
+
+
+%% Calculate dissipation
+
+Nseg = size(MOM,1);
+
+for i_s = 1:Nseg
+    dr = MOM.dr(i_s);
+    
+    for i_v = 1:Nvar
+        var = vars{i_v};
+
+        [MOM.(['edr_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s)] = edr_sfc( detrend(TURB(i_s).(var)),...
+            dr,fit_range,B(i_v),'Method',sfc_method,'FitPoints',sfc_fit_points );
+        
+        [MOM.(['edr_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s)] = edr_psd( detrend(TURB(i_s).(var)),...
+            dr,fit_range,C(i_v),'Method',psd_method,'FitPoints',psd_fit_points,...
+            'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
+    end
+end
 
