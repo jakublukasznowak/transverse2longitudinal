@@ -47,7 +47,7 @@ if ismember('MEAN_ALT',MOM.Properties.VariableNames)
 end
 
 
-if all(isfield(MOM,{'MEAN_THDG','MEAN_WDIR'}))
+if all(ismember({'MEAN_THDG','MEAN_WDIR'},MOM.Properties.VariableNames))
     [MOM.dir2,MOM.dir4] = dev_angle(MOM.MEAN_THDG,MOM.MEAN_WDIR);
 end
 

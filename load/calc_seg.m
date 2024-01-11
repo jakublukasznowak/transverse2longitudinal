@@ -13,7 +13,7 @@ SEG = cell(Nf,1);
 for i_f = 1:Nf
     
     samp = DATA(i_f).fsamp;
-    tas  = mean(DATA(i_f).TAS,'omitnan');
+    tas  = median(DATA(i_f).TAS,'omitnan');
     
     L = length(DATA(i_f).time);
     x = (1:L)'*tas/samp/1e3;
