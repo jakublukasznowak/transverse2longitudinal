@@ -10,7 +10,8 @@ arguments
     options.Method (1,1) string {mustBeMember(options.Method,{'direct','logmean'})} = 'logmean'
     options.FitPoints (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = 10
     options.Plot (1,1) logical = false
-    options.PlotRange (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotRange,x,dr)} = fit_range
+    options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotXLim,x,dr)} = fit_range
+    options.PlotYLim (1,2) {mustBeReal, mustBeNonempty} = [-inf inf];
 end
 
 
@@ -82,7 +83,7 @@ e.R2 = corrM(1,2);
 
 if options.Plot
     
-    iv = ( ceil(options.PlotRange(1)/dr) : options.PlotRange(2)/dr )';
+    iv = ( ceil(options.PlotXLim(1)/dr) : options.PlotXLim(2)/dr )';
     rv = iv*dr;
     Li = length(iv);
     Lx = length(x);
@@ -93,7 +94,7 @@ if options.Plot
     end
 
     
-    [fig,~,co] = fig16x12('loglog',[1 1],'XLim',options.PlotRange);
+    [fig,~,co] = fig16x12('loglog',[1 1],'XLim',options.PlotXLim,'YLim',options.PlotYLim);
     
     plot(rv,sfc,'.','Color',co(1,:))
     plot(rv_fit,sfc_fit,'^','MarkerFaceColor',co(2,:))

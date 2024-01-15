@@ -75,6 +75,7 @@ for i_f = 1:Nf
     
     Nseg = size(ind_final,1);
     seg.flight = repmat(DATA(i_f).flight,Nseg,1);
+    seg.name = string(num2str((1:Nseg)','%03d'));
     
     seg.start_idx = ind_final(:,1);
     seg.end_idx   = ind_final(:,2);
@@ -88,7 +89,7 @@ end
 SEG = cat(1,SEG{:});
 
 
-frontfields = {'flight','start','end'};
+frontfields = {'flight','name','start','end'};
 SEG = movevars(SEG,frontfields,'Before',1);
 
 

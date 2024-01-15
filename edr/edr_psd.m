@@ -10,7 +10,8 @@ arguments
     options.Method (1,1) string {mustBeMember(options.Method,{'direct','logmean'})} = 'logmean'
     options.FitPoints (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = 20
     options.Plot (1,1) logical = false
-    options.PlotRange (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotRange,x,dr)} = fit_range
+    options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotXLim,x,dr)} = fit_range
+    options.PlotYLim (1,2) {mustBeReal, mustBeNonempty} = [-inf inf];
     options.WindowLength (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = floor(length(x)/2)
     options.WindowOverlap (1,1) {mustBeInteger, mustBeNonnegative, mustBeFinite, mustBeNonempty} = ceil(length(x)/4)
 end
@@ -89,7 +90,7 @@ if options.Plot
     rv = 2*pi*dr./wv;
     rv_fit = 2*pi*dr./wv_fit;
   
-    [fig,~,co] = fig16x12('loglog',[1 1],'XLim',options.PlotRange);
+    [fig,~,co] = fig16x12('loglog',[1 1],'XLim',options.PlotXLim,'YLim',options.PlotYLim);
     
     plot(rv,psd,'.','Color',co(1,:))
     plot(rv_fit,psd_fit,'^','MarkerFaceColor',co(2,:))
@@ -111,7 +112,7 @@ if options.Plot
 %         'HorizontalAlignment','left','Interpreter','latex')
     text(0.66,0.10,['$\epsilon = ',sprintf('%.2f',edrFixed/10^floor(log10(edrFixed))),'\cdot10^',...
         sprintf('{%d}',floor(log10(edrFixed))),'\,\mathrm{m^2\,s^{-3}}$',...
-        newline,'$R = ',sprintf('%.3f',e.R2),'$'],...
+        newline,'$R = ',sprintf('%.3f',abs(e.R2)),'$'],...
         'FontSize',12,'Units','Normalized',...
         'HorizontalAlignment','left','Interpreter','latex')
     
