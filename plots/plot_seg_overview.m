@@ -6,9 +6,11 @@ if nargin<2
 end
 
 
-fig = figure('Units','normalized','Position',[0 0 0.6 0.3]);
-hold on, grid on
-co = get(gca,'ColorOrder');
+[fig,ax,co] = fig16x12; % = figure('Units','normalized','Position',[0 0 0.6 0.3]);
+% hold on, grid on
+% co = get(gca,'ColorOrder');
+fig.PaperSize = [36 10]; fig.PaperPosition = [0 0 36 10];
+ax.Position = [0.07 0.14 1-1.5*0.07 1-1.5*0.14];
 
 Nlvl = numel(levels);
 for i_l = 1:Nlvl
