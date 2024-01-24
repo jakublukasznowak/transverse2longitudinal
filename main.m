@@ -1,7 +1,8 @@
 
-% Select plane: ATR, C130 or TO
-
-plane = 'TO';
+% plane = 'ATR-EUREC4A';
+% plane = 'C130-VOCALS';
+% plane = 'C130-RICO';
+plane = 'TO-POST';
 
 
 % Prepare paths
@@ -19,7 +20,7 @@ plotpath = [plotpath,filesep,plane];
 
 % MYDATAPATH is the path where you downloaded the datasets:
 %
-% MYDATAPATH/ATR/TURBLENCE
+% MYDATAPATH/ATR-EUREC4A/TURBLENCE
 %
 % Lothon, M. & Brilouet, P. (2020). SAFIRE ATR42: Turbulence Data 25 Hz. Aeris.
 % doi.org/10.25326/128
@@ -27,32 +28,39 @@ plotpath = [plotpath,filesep,plane];
 % 
 % In this code 'longlegs' L3 v1.9 is used.
 %
-% MYDATAPATH/ATR/TURBLENCE
+% MYDATAPATH/ATR-EUREC4A/TURBLENCE
 %
 % Table 3 from Bony et al. 2022: EUREC4A observations from the SAFIRE ATR42 aircraft,
 % Earth Syst. Sci. Data, 14, 2021–2064, doi.org/10.5194/essd-14-2021-2022, 2022.
 %
 %
-% MYDATAPATH/C130/TURBULENCE
+% MYDATAPATH/C130-RICO/TURBULENCE
+% 
+% NCAR/NSF C-130 Navigation, State Parameter, and Microphysics HRT Data - 25 Hz. Version 1.0
+% doi.org/10.5065/D64J0CDM
+% https://data.eol.ucar.edu/dataset/87.049
+% 
+%
+% MYDATAPATH/C130-VOCALS/TURBULENCE
 % 
 % NCAR/NSF C-130 Navigation, State Parameter, and Microphysics HRT (25 sps) Data
 % doi.org/10.5065/D69K48JK
 % https://data.eol.ucar.edu/dataset/89.002
 %
-% MYDATAPATH/C130/LIDAR
+% MYDATAPATH/C130-VOCALS/LIDAR
 % 
 % NSF/NCAR C130 Radar, Lidar and Radiometer Integrated Dataset
 % doi.org/10.26023/8KEJ-BQNG-W808 
 % https://data.eol.ucar.edu/dataset/89.159
 %
 %
-% MYDATAPATH/TO/TURBULENCE
+% MYDATAPATH/TO-POST/TURBULENCE
 %
 % UC Irvine 40-hz Probes - netCDF format
 % doi.org/10.26023/KP56-KFJS-VC07 
 % https://data.eol.ucar.edu/dataset/111.033
 %
-% MYDATAPATH/TO/cloud_tops.txt
+% MYDATAPATH/TO-POST/cloud_tops.txt
 %
 % Table 1 from Carman, J. K., Rossiter, D. L., Khelif, D., Jonsson, H. H.,
 % Faloona, I. C., and Chuang, P. Y.: Observational constraints on entrainment
@@ -65,10 +73,10 @@ plotpath = [plotpath,filesep,plane];
 %% Load datasets
 
 
-if strcmp(plane,'ATR')
+if strcmp(plane,'ATR-EUREC4A')
     
     fit_range = [16 80];
-    ex_s = 48;
+    ex_s = ["RF12","R2B"];
     
     % List of levels
     levels  = {'cloud-base','top-subcloud','mid-subcloud','near-surface'};
@@ -107,10 +115,10 @@ if strcmp(plane,'ATR')
     TURB = load_atr_turb(MOM,datapath,'L3','v1.9',turb_vars(:,2),turb_vars(:,1)); % Load signals for the selected segments only
 
     
-elseif strcmp(plane,'C130')
+elseif strcmp(plane,'C130-VOCALS')
     
     fit_range = [16 80];
-    ex_s = 119;
+    ex_s = ["RF09","C6"];
     
     % List of levels
     levels  = {'in-cloud','cloud-base','sub-cloud'};
@@ -130,7 +138,7 @@ elseif strcmp(plane,'C130')
     % Read data files
     
     [DATA,turb_info] = read_turb([datapath,filesep,'TURBULENCE'],turb_vars(:,2),turb_vars(:,1));
-    [SEG,seg_info] = load_c130_seg(datapath); % Segmentation from auxiliary dataset
+    [SEG,seg_info] = load_vocals_seg(datapath); % Segmentation from auxiliary dataset
     
     
     % Process
@@ -142,15 +150,91 @@ elseif strcmp(plane,'C130')
     MOM.top = SEG.cloud_top;
     MOM.cloud_base = SEG.cloud_base;
     MOM.LCL = SEG.LCL;
+    
+    exc_seg = ["RF04","C4"]; % strange maneuvers
+    for i_e = 1:size(exc_seg,1)
+        ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
+        MOM(ind_s,:) = [];
+        TURB(ind_s) = [];
+    end
+    
+
+elseif strcmp(plane,'C130-RICO')
+    
+    fit_range = [16 80];
+    ex_s = ["RF06","SC01"];
+    
+    % List of levels
+    levels  = {'cloud-layer','cloud-base','sub-cloud','near-surface'};
+    tags = {'CL','CB','SC','S'};
+    
+    % List of variables from turbulence dataset
+    turb_vars = {'time','Time';
+                 'P','PSXC';
+                 'ALT','GGALTC';
+                 'TAS','TASX';
+                 'THDG','THDG';
+                 'U','UIC';
+                 'V','VIC';
+                 'W','WIC';
+                 'UX','UXC';
+                 'VY','VYC'};
+    
+             
+    % Read data files
+    
+    [DATA,turb_info] = read_turb([datapath,filesep,'TURBULENCE'],turb_vars(:,2),turb_vars(:,1));
+      
+    
+    % Process
+    
+    SEG  = calc_seg(DATA,'MinLength',30e3,'Plots',false,...
+        'AltAvScale',4e3,'AltDrvLimit',0.01,...
+        'HdgAvScale',20e3,'HdgDrvLimit',0.003);  % Algorithmic detection of horizontal segments); % Algorithmic detection of horizontal segments
+    TURB = calc_turb(SEG,DATA);                  % Cut signals to the segments
+    MOM  = calc_mom(TURB);                       % Calculate mean segment values
+    
+    % Classify segments according to height 
+    MOM.level = repmat("",size(MOM,1),1);
+    MOM.level(MOM.MEAN_P>=990) = "near-surface";
+    MOM.level(MOM.MEAN_P<990 & MOM.MEAN_P>=950) = "sub-cloud";
+    MOM.level(MOM.MEAN_P<950 & MOM.MEAN_P>=900) = "cloud-base";
+    MOM.level(MOM.MEAN_P<900 & MOM.MEAN_P>=800) = "cloud-layer";
+    MOM = movevars(MOM,{'flight','level','alt','length'},'Before',1);
+    MOM.top = repmat(1000,size(MOM,1),1);
+    
+    % Select segments
+    ind_s = ismember(MOM.level,levels);
+    TURB = TURB(ind_s,:);
+    MOM  = MOM(ind_s,:);
+    
+    % Label segments
+    flights = unique(MOM.flight);
+    for i_f = 1:numel(flights)
+        for i_l = 1:numel(levels)
+            ind = MOM.flight==flights(i_f) & MOM.level==levels{i_l};
+            MOM.name(ind) = num2str((1:sum(ind))',[tags{i_l},'%02d']);
+        end
+    end
+    
+    exc_seg = ["RF11","S02";    % spikes
+               "RF16","SC09";   % strange maneuvers
+               "RF03","SC03"];  % strange maneuvers
+    for i_e = 1:size(exc_seg,1)
+        ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
+        MOM(ind_s,:) = [];
+        TURB(ind_s) = [];
+    end
 
     
-elseif strcmp(plane,'TO')
+elseif strcmp(plane,'TO-POST')
     
     fit_range = [8 80];
-    ex_s = 62;
+    ex_s = ["RF12","CB01"];
     
     % List of levels
     levels  = {'cloud-top','cloud-base','sub-cloud'};%,'near-surface'};
+    tags = {'CT','CB','SC'};
     
     % List of variables from turbulence dataset
     turb_vars = {'time','Time';
@@ -165,12 +249,19 @@ elseif strcmp(plane,'TO')
     % Read data files
     
     [DATA,turb_info] = read_turb([datapath,filesep,'TURBULENCE'],turb_vars(:,2),turb_vars(:,1));
+    for i_s = 1:size(DATA,1)
+        DATA(i_s).ALT = movmean(DATA(i_s).ALT,DATA(i_s).fsamp*2);
+    end
+    
     CT = readtable([datapath,filesep,'cloud_tops.txt']);
     
     
     % Process
     
-    SEG = calc_seg(DATA,true);  % Algorithmic detection of horizontal segments
+    SEG = calc_seg(DATA,'MinLength',20e3,'Plots',false,...
+        'AltAvScale',2e3,'AltDrvLimit',0.012,...
+        'HdgAvScale',2e3,'HdgDrvLimit',0.005,...
+        'TASLimit',0.9);  % Algorithmic detection of horizontal segments
     TURB = calc_turb(SEG,DATA); % Cut signals to the segments
     TURB = uv2uxvy(TURB);       % Wind rotation from U,V to UX,VY
     MOM = calc_mom(TURB);       % Calculate mean segment values
@@ -199,6 +290,24 @@ elseif strcmp(plane,'TO')
     ind_s = ismember(MOM.level,levels) & MOM.length>=20e3;
     TURB = TURB(ind_s,:);
     MOM  = MOM(ind_s,:);
+    
+    % Label segments
+    flights = unique(MOM.flight);
+    for i_f = 1:numel(flights)
+        for i_l = 1:numel(levels)
+            ind = MOM.flight==flights(i_f) & MOM.level==levels{i_l};
+            MOM.name(ind) = num2str((1:sum(ind))',[tags{i_l},'%02d']);
+        end
+    end
+    
+    exc_seg = ["RF05","CT03";  % periodic signal oscillations
+               "RF07","CT03";  % noise
+               "RF04","CT02"];  % noise
+    for i_e = 1:size(exc_seg,1)
+        ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
+        MOM(ind_s,:) = [];
+        TURB(ind_s) = [];
+    end
 
 end
 
@@ -291,6 +400,8 @@ MOM.ar_sfc_WU = MOM.off_sfc_W./MOM.off_sfc_UX;
 MOM.ar_sfc_WV = MOM.off_sfc_W./MOM.off_sfc_VY;
 MOM.ar_psd_WU = MOM.off_psd_W./MOM.off_psd_UX;
 MOM.ar_psd_WV = MOM.off_psd_W./MOM.off_psd_VY;
+MOM.ar_sfc_VU = MOM.off_sfc_VY./MOM.off_sfc_UX;
+MOM.ar_psd_VU = MOM.off_psd_VY./MOM.off_psd_UX;
 
 % Dissipation rates after reversal of longi/trans
 MOM.edr_sfc_UY = MOM.edr_sfc_UX * (B_L/B_T).^(3/2);
@@ -304,14 +415,16 @@ MOM.edr_psd_VX = MOM.edr_psd_VY * (C_T/C_L).^(3/2);
 
 disp('Compute integral length scale ...')
 
-for i_v = 1:Nvar
-    var = vars{i_v}; fprintf('%2s',var)
+% for i_v = 1:Nvar
+%     var = vars{i_v};
+    var = 'W';
+    fprintf('%2s',var)
     for i_s = 1:Nseg
         fprintf(' %d',i_s)
         MOM.(['ls_',var])(i_s) = int_ls_short(detrend(TURB(i_s).(var)),'Method','e-decay')*MOM.dr(i_s);
     end
     fprintf('\n')
-end
+% end
 
 
 
@@ -320,9 +433,21 @@ end
 dirs = {'along','cross'};
 
 
+%% Exclude dirty segments
+
+% ind_exc_psd = find( MOM.slp_psd_W > 7/3 | MOM.slp_psd_UX > 7/3 | MOM.slp_psd_VY > 7/3 | ...
+%                     MOM.slp_psd_W < 2/3 | MOM.slp_psd_UX < 2/3 | MOM.slp_psd_VY < 2/3 );
+% ind_exc_sfc = find( MOM.slp_sfc_W > 5/3 | MOM.slp_sfc_UX > 5/3 | MOM.slp_sfc_VY > 5/3 | ...
+%                     MOM.slp_sfc_W < 0   | MOM.slp_sfc_UX < 0   | MOM.slp_sfc_VY < 0   );
+%                   
+% MOM ([ind_exc_psd;ind_exc_sfc],:) = [];
+% TURB([ind_exc_psd;ind_exc_sfc],:) = [];
+
+
+
 %% Examples of dissipation rate derivation
 
-i_s = ex_s;
+% i_s = find( MOM.flight==ex_s(1) & MOM.name==ex_s(2) );
 dr = MOM.dr(i_s);
 
 for i_v = 1:Nvar
@@ -335,7 +460,7 @@ for i_v = 1:Nvar
     print(gcf,join([plotpath,'ex','sfc',var,string(i_s)],'_'),'-dpng','-r300')
 end
 
-%%
+%
 for i_v = 1:Nvar
     var = vars{i_v};
     
@@ -356,9 +481,9 @@ xlabel('$B_L\epsilon_u^{2/3}\,\textrm{sfc}$','Interpreter','latex')
 ylabel('$B_T\epsilon_v^{2/3}\,\textrm{sfc}$','Interpreter','latex')
 title(plane)
 print(fig,[plotpath,'_uv23_sfc'],'-dpng','-r300')
-ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
-ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
-print(fig,[plotpath,'_uv23_sfc_zoom'],'-dpng','-r300')
+% ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
+% ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
+% print(fig,[plotpath,'_uv23_sfc_zoom'],'-dpng','-r300')
 
 
 [fig,ax] = plot_xy(MOM,{'off_psd_UX'},{'off_psd_VY'},levels,'levels',1,1,{'cross3/4','cross1','cross4/3'});
@@ -367,9 +492,9 @@ xlabel('$C_L\epsilon_u^{2/3}\,\textrm{psd}$','Interpreter','latex')
 ylabel('$C_T\epsilon_v^{2/3}\,\textrm{psd}$','Interpreter','latex')
 title(plane)
 print(fig,[plotpath,'_uv23_psd'],'-dpng','-r300')
-ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
-ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
-print(fig,[plotpath,'_uv23_psd_zoom'],'-dpng','-r300')
+% ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
+% ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
+% print(fig,[plotpath,'_uv23_psd_zoom'],'-dpng','-r300')
 
 
 %% (u,w)^2/3
@@ -380,19 +505,19 @@ xlabel('$B_L\epsilon_u^{2/3}\,\textrm{sfc}$','Interpreter','latex')
 ylabel('$B_T\epsilon_w^{2/3}\,\textrm{sfc}$','Interpreter','latex')
 title(plane)
 print(fig,[plotpath,'_uw23_sfc'],'-dpng','-r300')
-ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
-ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
-print(fig,[plotpath,'_uw23_sfc_zoom'],'-dpng','-r300')
+% ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
+% ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
+% print(fig,[plotpath,'_uw23_sfc_zoom'],'-dpng','-r300')
 
 [fig,ax] = plot_xy(MOM,{'off_psd_UX'},{'off_psd_W'},levels,'levels',1,1,{'cross3/4','cross1','cross4/3'});
 legend(cat(2,levels,dirs),'Location','northwest')
-xlabel('$B_L\epsilon_u^{2/3}\,\textrm{psd}$','Interpreter','latex')
-ylabel('$B_T\epsilon_w^{2/3}\,\textrm{psd}$','Interpreter','latex')
+xlabel('$C_L\epsilon_u^{2/3}\,\textrm{psd}$','Interpreter','latex')
+ylabel('$C_T\epsilon_w^{2/3}\,\textrm{psd}$','Interpreter','latex')
 title(plane)
 print(fig,[plotpath,'_uw23_psd'],'-dpng','-r300')
-ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
-ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
-print(fig,[plotpath,'_uw23_psd_zoom'],'-dpng','-r300')
+% ax.XLim = ax.XLim(1) + [0 0.5*diff(ax.XLim)];
+% ax.YLim = ax.YLim(1) + [0 0.5*diff(ax.YLim)];
+% print(fig,[plotpath,'_uw23_psd_zoom'],'-dpng','-r300')
 
 
 %% (w/u,w/v)^2/3
@@ -404,8 +529,8 @@ xlabel('$B_T\epsilon_w^{2/3}/(B_L\epsilon_u^{2/3})\,\textrm{sfc}$','Interpreter'
 ylabel('$B_T\epsilon_w^{2/3}/(B_T\epsilon_v^{2/3})\,\textrm{sfc}$','Interpreter','latex')
 title(plane)
 print(fig,[plotpath,'_ar23_sfc'],'-dpng','-r300')
-ax.XLim = [0.5 1.6]; ax.YLim = [0.5 1.6];
-print(fig,[plotpath,'_ar23_sfc_zoom'],'-dpng','-r300')
+% ax.XLim = [0.5 2]; ax.YLim = [0.5 2];
+% print(fig,[plotpath,'_ar23_sfc_zoom'],'-dpng','-r300')
 
 [fig,ax] = plot_xy(MOM,{'ar_psd_WU'},{'ar_psd_WV'},levels,'levels',1,1,...
     {'cross3/4','cross4/3','ver3/4','ver4/3','hor3/4','hor4/3'});
@@ -414,15 +539,35 @@ xlabel('$C_T\epsilon_w^{2/3}/(C_L\epsilon_u^{2/3})\,\textrm{psd}$','Interpreter'
 ylabel('$C_T\epsilon_w^{2/3}/(C_T\epsilon_v^{2/3})\,\textrm{psd}$','Interpreter','latex')
 title(plane)
 print(fig,[plotpath,'_ar23_psd'],'-dpng','-r300')
-ax.XLim = [0.5 1.6]; ax.YLim = [0.5 1.6];
-print(fig,[plotpath,'_ar23_psd_zoom'],'-dpng','-r300')
+% ax.XLim = [0.4 1.6]; ax.YLim = [0.4 1.6];
+% print(fig,[plotpath,'_ar23_psd_zoom'],'-dpng','-r300')
+
+%%
+
+[fig,ax] = plot_xy(MOM,{'ar_psd_VU'},{'ar_sfc_VU'},levels,'levels',1,1,...
+    {'ver3/4','ver4/3','hor3/4','hor4/3'});
+legend(cat(2,levels,dirs),'Location','best')
+xlabel('$P_v/P_u$','Interpreter','latex')
+ylabel('$D_v/D_u$','Interpreter','latex')
+title(plane)
+print(fig,[plotpath,'_ax23'],'-dpng','-r300')
+% ax.XLim = [0.4 1.6]; ax.YLim = [0.4 1.6];
+% print(fig,[plotpath,'_ax23_zoom'],'-dpng','-r300')
+
+[fig,ax] = plot_xy(MOM,{'ar_psd_WU'},{'ar_sfc_WU'},levels,'levels',1,1,...
+    {'ver3/4','ver4/3','hor3/4','hor4/3'});
+legend(cat(2,levels,dirs),'Location','best')
+xlabel('$P_w/P_u$','Interpreter','latex')
+ylabel('$D_w/D_u$','Interpreter','latex')
+title(plane)
+print(fig,[plotpath,'_ar23'],'-dpng','-r300')
 
 
 %% (s,p)
 
 fig = plot_xy(MOM,{'slp_sfc_W','slp_sfc_UX','slp_sfc_VY'},...
     {'slp_psd_W','slp_psd_UX','slp_psd_VY'},levels,'vars',1,0,{'ver2/3','hor5/3'},...
-    'XLim',[0.1 1.1],'YLim',[0.5 2.2]);
+    'XLim',[0 5/3],'YLim',[2/3 7/3]);
 fig.PaperSize = [20 12]; fig.PaperPosition = [0 0 20 12];
 legend(cat(2,vars,levels,dirs),'Location','eastoutside')
 xlabel('$s\,\textrm{sfc}$','Interpreter','latex')
@@ -528,3 +673,12 @@ print(h.figure,[plotpath,'_alt_wsk'],'-dpng','-r300')
 
 sortrows(groupsummary(MOM,"level",["mean","std","min","max"],...
     ["alt","vstop","ls_W","length_km"]),"mean_alt",'descend')
+
+
+
+% annotation(f,'textbox',[0 .9 .1 .1],'String',ts{i},...
+%         'EdgeColor','none','FontSize',fontsize+2,'FontWeight','bold')
+%     
+% #!/bin/bash
+% pdfjam --nup 3x1 --scale 0.95 --papersize '{36cm,10cm}' pfig08*.pdf --outfile fig08.pdf
+% pdfjam --nup 3x1 --scale 0.95 --papersize '{36cm,10cm}' pfig_ex_08_x.pdf pfig_ex_08_y.pdf pfig08_z.pdf --outfile fig08ex.pdf

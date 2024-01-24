@@ -1,8 +1,16 @@
 
-function SEG = calc_seg(DATA,showfigures)
+function SEG = calc_seg(DATA,options)
 
-if nargin<2 || isempty(showfigures)
-    showfigures = false;
+arguments
+    DATA (:,1) struct
+    options.Plots (1,1) logical = false
+    options.AltAvScale (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 4e3 % m
+    options.AltDrvLimit (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 0.01 % m/m
+    options.HdgAvScale (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 20e3 % m
+    options.HdgDrvLimit (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 0.003 % deg/m
+    options.TASLimit (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 0.8 % 
+    options.MinLength (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 20e3 % m
+    options.MaxTrend (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 0.002 % m/m
 end
 
 
@@ -12,62 +20,82 @@ SEG = cell(Nf,1);
 
 for i_f = 1:Nf
     
-    samp = DATA(i_f).fsamp;
+    fsamp = DATA(i_f).fsamp;
     tas  = median(DATA(i_f).TAS,'omitnan');
     
     L = length(DATA(i_f).time);
-    x = (1:L)'*tas/samp/1e3;
+    x = (1:L)'*tas/fsamp/1e3; % km
 
-    
-    % Condition (1): small time derivative of averaged altitude
-    dz = movmean(diff(DATA(i_f).ALT),floor(1e3/tas*samp));
-    mask_alt = [false; (abs(dz)<0.025)];
-    
-    % Condition (2): small time derivative of averaged heading
-    dhdg = movmean(diff(unwrap(DATA(i_f).THDG)),60*samp);
-    mask_hdg = [false; abs(dhdg)<0.005];
 
-    % Condition (3): minimum TAS 50 m/s
-    mask_tas = (movmean(DATA(i_f).TAS,floor(1e3/tas*samp))>50);
+    % Condition (1): small derivative of altitude
+    dzdx = diff(DATA(i_f).ALT)*fsamp/tas;
+    dzdx_m = movmean(dzdx,floor(options.AltAvScale/tas*fsamp));
+    mask_alt = [false; abs(dzdx_m) < options.AltDrvLimit ];
     
-    mask_and = mask_alt & mask_hdg & mask_tas;
+    % Condition (2): small derivative of heading
+    dhdx = diff(unwrap(DATA(i_f).THDG))*fsamp/tas;
+    dhdx_m = movmean(dhdx,floor(options.HdgAvScale/tas*fsamp));
+    mask_hdg = [false; abs(dhdx_m) < options.HdgDrvLimit];
+
+    % Condition (3): minimum TAS
+    tas_m = movmean(DATA(i_f).TAS,floor(options.AltAvScale/tas*fsamp));
+    mask_tas = tas_m > options.TASLimit*tas;
     
-    % Condition (4): minimum length of 10 km
-    ind_and = mask2ind(mask_and);
-    ind_10 = ind_and(diff(ind_and,1,2)*tas/samp>=10e3,:);
-    mask_10 = ind2mask(ind_10,L);
+    mask_3 = mask_alt & mask_hdg & mask_tas;
     
-    % Condition (5): small inclination within the segment
-    slopes = zeros(size(ind_10,1),1);
-    for i = 1:size(ind_10,1)
-        p = polyfit(x(ind_10(i,1):ind_10(i,2)),DATA(i_f).ALT(ind_10(i,1):ind_10(i,2)),1);
+    % Condition (4): minimum segment length
+    ind_3 = mask2ind(mask_3);
+    ind_len = ind_3( diff(ind_3,1,2)*tas/fsamp >= options.MinLength, :);
+    mask_len = ind2mask(ind_len,L);
+    
+    % Condition (5): small altitude trend within the segment
+    slopes = zeros(size(ind_len,1),1);
+    for i = 1:size(ind_len,1)
+        p = polyfit(x(ind_len(i,1):ind_len(i,2)),DATA(i_f).ALT(ind_len(i,1):ind_len(i,2)),1);
         slopes(i) = p(1);
     end
-    ind_slopes = ind_10(abs(slopes)<3,:);
-    mask_slopes = ind2mask(ind_slopes,L);
+    ind_trend = ind_len( abs(slopes) < options.MaxTrend*1e3, :);
+    mask_trend = ind2mask(ind_trend,L);
 
-    ind_final = ind_slopes;
+    ind_final = ind_trend;
 
-    if showfigures
+    
+    if options.Plots
         figure, hold on, grid on
         plot(x,DATA(i_f).ALT)
         plot(x,DATA(i_f).THDG,'.')
         plot(x(mask_alt),DATA(i_f).ALT(mask_alt),'.')
         plot(x(mask_hdg),DATA(i_f).ALT(mask_hdg)+20,'.')
-        plot(x(mask_10),DATA(i_f).ALT(mask_10)+40,'.')
-        plot(x(mask_slopes),DATA(i_f).ALT(mask_slopes)+60,'.')
-%         plot(get(gca,'XLim'),[1 1]*DATA(i_f).cloud_base,'--','Color','b')
-%         plot(get(gca,'XLim'),[1 1]*DATA(i_f).cloud_top,'--','Color','b')
+        plot(x(mask_len),DATA(i_f).ALT(mask_len)+40,'.')
+        plot(x(mask_trend),DATA(i_f).ALT(mask_trend)+60,'.')
+        legend({'alt','hdg','small dz/dx','small dh/dx','large length','small trend'})
         title(DATA(i_f).flight)
-        legend({'alt','hdg','small dz','small dhdg','>10 km','small slope'})
+        xlabel('x [km]')
 
+        figure, hold on, grid on
+%         plot(x(2:end),   1e3*dzdx)
+        plot(x(2:end),   1e3*dzdx_m)
+        plot(x([2,end]), 1e3*[1 1]*options.AltDrvLimit,'Color','black')
+        plot(x([2,end]),-1e3*[1 1]*options.AltDrvLimit,'Color','black')
+        title(DATA(i_f).flight)
+        xlabel('x [km]')
+        ylabel('dz/dx [m/km]')
+        
+        figure, hold on, grid on
+%         plot(x(2:end),   1e3*dhdx)
+        plot(x(2:end),   1e3*dhdx_m)
+        plot(x([2,end]), 1e3*[1 1]*options.HdgDrvLimit,'Color','black')
+        plot(x([2,end]),-1e3*[1 1]*options.HdgDrvLimit,'Color','black')
+        title(DATA(i_f).flight)
+        xlabel('x [km]')
+        ylabel('dh/dx [deg/km]')
+        
 %         figure, hold on, grid on
-%         plot(x(2:end),dz)
-%         plot(x(mask_alt(2:end)),dz(mask_alt(2:end)),'.')
-% 
-%         figure, hold on, grid on
-%         plot(x(2:end),dhdg)
-%         plot(x(mask_hdg(2:end)),dhdg(mask_hdg(2:end)),'.')
+%         plot(x,tas_m)
+%         plot(x([1,end]),[1 1]*options.TASLimit*tas,'Color','black')
+%         title(DATA(i_f).flight)
+%         xlabel('x [km]')
+%         ylabel('TAS [m/s]')
     end
     
     

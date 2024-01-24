@@ -1,5 +1,5 @@
 
-function [SEG,seg_info,DATA] = load_c130_seg(datapath)
+function [SEG,seg_info,DATA] = load_vocals_seg(datapath)
 
 % Level labels
 level_dict = [

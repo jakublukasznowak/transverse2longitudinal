@@ -21,7 +21,7 @@ for i_l = 1:Nlvl
     end
 end
 
-legend(levels)
+legend(levels,'Location','best')
 ylabel('Altitude [m]')
 
 end

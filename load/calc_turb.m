@@ -25,7 +25,7 @@ for i_s = 1:Nseg
     
     
     samps = cellfun(@num2str,num2cell(DATA(ind_f).fsampvec),'UniformOutput',false);
-    tvec = intersect(fieldnames(DATA)',cellfun(@(x) ['time',x],samps,'UniformOutput',false));
+    tvec = intersect(cellfun(@(x) ['time',x],samps,'UniformOutput',false),fieldnames(DATA)','stable');
     Lvec = cellfun(@(x) length(DATA(ind_f).(x)),tvec);
     
     for i_v = 1:Nvar
