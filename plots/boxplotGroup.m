@@ -1,4 +1,7 @@
 function handles = boxplotGroup(varargin)
+
+fontsize = 12;
+
 % BOXPLOTGROUP groups boxplots together with horizontal space between groups.
 %   boxplotGroup(x) receives a 1xm cell array where each element is a matrix with
 %   n columns and produces n groups of boxplot boxes with m boxes per group.
@@ -175,6 +178,7 @@ if isempty(h.axis)
 %     h.axis = gca();
     h.figure = figure;
     h.axis = axes;
+    h.axis.FontSize = fontsize;
 else
     h.figure = ancestor(h.axis,'figure');
 end

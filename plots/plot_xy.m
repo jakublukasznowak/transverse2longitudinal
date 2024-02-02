@@ -18,8 +18,8 @@ if nargin<4 || isempty(levels)
 end
 
 
-mks = 8;
-lw = 1;
+mks = 6;
+lw = 1.5;
 
 dirs   = {'along','cross'};
 
@@ -44,12 +44,12 @@ if strcmp(coloring,'vars')
             plot(nan,nan,'Color','black','Marker',mk{i_l},'MarkerSize',mks,'LineStyle','none')
         end
     end
-    if ifdirs
-        plot(nan,nan,'Color','black','MarkerFaceColor','black',...
-            'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
-        plot(nan,nan,'Color','black','MarkerFaceColor','none',...
-            'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
-    end
+%     if ifdirs
+%         plot(nan,nan,'Color','black','MarkerFaceColor','black',...
+%             'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
+%         plot(nan,nan,'Color','black','MarkerFaceColor','none',...
+%             'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
+%     end
 elseif strcmp(coloring,'levels')
     if Nlvl>1
         for i_l = 1:Nlvl
@@ -63,12 +63,12 @@ elseif strcmp(coloring,'levels')
             plot(nan,nan,'Color','black','Marker',mk{i_v},'MarkerSize',mks,'LineStyle','none')
         end
     end
-    if ifdirs
-        plot(nan,nan,'Color','black','MarkerFaceColor','black',...
-            'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
-        plot(nan,nan,'Color','black','MarkerFaceColor','none',...
-            'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
-    end
+%     if ifdirs
+%         plot(nan,nan,'Color','black','MarkerFaceColor','black',...
+%             'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
+%         plot(nan,nan,'Color','black','MarkerFaceColor','none',...
+%             'Marker',mk{1},'MarkerSize',mks,'LineStyle','none')
+%     end
 end
 
 
@@ -87,17 +87,17 @@ for i_l = 1:Nlvl
             ind = MOM.level==levels{i_l} & MOM.dir2==dirs{1};
             plot( MOM.(xvars{i_v})(ind),MOM.(yvars{i_v})(ind),...
                 'Color',c,'MarkerFaceColor',c,...
-                'Marker',m,'MarkerSize',mks,'LineStyle','none')     
+                'Marker',m,'MarkerSize',mks,'LineStyle','none','HandleVisibility','off')     
 
             ind = MOM.level==levels{i_l} & MOM.dir2==dirs{2};
             plot( MOM.(xvars{i_v})(ind),MOM.(yvars{i_v})(ind),...
                 'Color',c,'MarkerFaceColor','none',...
-                'Marker',m,'MarkerSize',mks,'LineStyle','none')
+                'Marker',m,'MarkerSize',mks,'LineStyle','none','HandleVisibility','off')
         else
             ind = (MOM.level==levels{i_l});
             plot( MOM.(xvars{i_v})(ind),MOM.(yvars{i_v})(ind),...
                 'Color',c,'MarkerFaceColor',c,...
-                'Marker',m,'MarkerSize',mks,'LineStyle','none')
+                'Marker',m,'MarkerSize',mks,'LineStyle','none','HandleVisibility','off')
         end
             
     end
@@ -112,13 +112,16 @@ end
 xlim=ax.XLim; ylim=ax.YLim;
 for i_b = 1:numel(blines)
     if startsWith(blines{i_b},'hor')
-        plot(xlim,eval(erase(blines{i_b},'hor'))*[1 1],'LineWidth',lw,'Color','black')
+        plot(xlim,eval(erase(blines{i_b},'hor'))*[1 1],'LineWidth',lw,'LineStyle','--',...
+            'Color','black','HandleVisibility','off')
     end
     if startsWith(blines{i_b},'ver')
-        plot(eval(erase(blines{i_b},'ver'))*[1 1],ylim,'LineWidth',lw,'Color','black')
+        plot(eval(erase(blines{i_b},'ver'))*[1 1],ylim,'LineWidth',lw,'LineStyle','--',...
+            'Color','black','HandleVisibility','off')
     end
     if startsWith(blines{i_b},'cross')
-        plot(xlim,eval(erase(blines{i_b},'cross'))*xlim,'LineWidth',lw,'Color','black')
+        plot(xlim,eval(erase(blines{i_b},'cross'))*xlim,'LineWidth',lw,'LineStyle','--',...
+            'Color','black','HandleVisibility','off')
     end
 end
 ax.XLim=xlim; ax.YLim=ylim;

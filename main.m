@@ -4,7 +4,7 @@
 
 % plane = 'ATR-EUREC4A'; ifdirs = true;
 % plane = 'C130-RICO';   ifdirs = false;
-% plane = 'C130-VOCALS'; ifdirs = false;
+% plane = 'C130-VOCALS-REx'; ifdirs = false;
 % plane = 'TO-POST';     ifdirs = true;
 
 
@@ -82,28 +82,32 @@ plotpath = [plotpath,filesep,plane];
 
 if strcmp(plane,'ATR-EUREC4A')
     
-    fit_range = [16 80];
+    sfc_fit_range = [8 40];
+    psd_fit_range = [16 80];
     ex_s = ["RF12","R2B"];
     
     [TURB,MOM,levels] = load_eureca_all(datapath);
 
-elseif strcmp(plane,'C130-VOCALS')
-    
-    fit_range = [16 80];
-    ex_s = ["RF09","C6"];
-    
-    [TURB,MOM,levels] = load_vocals_all(datapath);
-
 elseif strcmp(plane,'C130-RICO')
     
-    fit_range = [16 80];
+    sfc_fit_range = [8 40];
+    psd_fit_range = [16 80];
     ex_s = ["RF06","SC01"];
     
     [TURB,MOM,levels] = load_rico_all(datapath);
+
+elseif strcmp(plane,'C130-VOCALS-REx')
+    
+    sfc_fit_range = [8 40];
+    psd_fit_range = [16 80];
+    ex_s = ["RF09","C6"];
+    
+    [TURB,MOM,levels] = load_vocals_all(datapath);
     
 elseif strcmp(plane,'TO-POST')
     
-    fit_range = [8 80];
+    sfc_fit_range = [4 40];
+    psd_fit_range = [8 80];
     ex_s = ["RF12","CB01"];
     
     [TURB,MOM,levels] = load_post_all(datapath);
@@ -123,10 +127,10 @@ C_L = 0.5; C_T = 0.66;
 % Settings
 
 sfc_method = "logmean";
-sfc_fit_points = 6;
+sfc_fit_points = 5;
 
 psd_method = "logmean";
-psd_fit_points = 6;
+psd_fit_points = 5;
 psd_win_length = 1000; % m
 psd_win_overlap = 500; % m
 
@@ -151,10 +155,10 @@ for i_v = 1:Nvar
         dr = MOM.dr(i_s);
 
         [MOM.(['edr_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = edr_sfc( detrend(TURB(i_s).(var)),...
-            dr,fit_range,B(i_v),'Method',sfc_method,'FitPoints',sfc_fit_points );
+            dr,sfc_fit_range,B(i_v),'Method',sfc_method,'FitPoints',sfc_fit_points );
         
         [MOM.(['edr_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),ep] = edr_psd( detrend(TURB(i_s).(var)),...
-            dr,fit_range,C(i_v),'Method',psd_method,'FitPoints',psd_fit_points,...
+            dr,psd_fit_range,C(i_v),'Method',psd_method,'FitPoints',psd_fit_points,...
             'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
         
         E(1).(['sfc_',var])(i_s) = es;
@@ -240,10 +244,17 @@ plot_all
 
 %% Summmary of segments
 
-print_table(MOM,{'alt','vstop','ls_W','length_km'},1,0)
-print_table(MOM,{'ar_sfc_VU','ar_sfc_WU','ar_psd_VU','ar_psd_WU'})
+print_table(MOM,{'alt','ls_W','length_km'},1,0)
+
+print_table(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
+print_table(MOM,{'e_ar_sfc_VU','e_ar_psd_VU','e_ar_sfc_WU','e_ar_psd_WU'})
+
 print_table(MOM,{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
                  'slp_psd_UX','slp_psd_VY','slp_psd_W'})
+print_table(MOM,{'e_slp_sfc_UX','e_slp_sfc_VY','e_slp_sfc_W',...
+                 'e_slp_psd_UX','e_slp_psd_VY','e_slp_psd_W'})
+
+
 
 % annotation(f,'textbox',[0 .9 .1 .1],'String',ts{i},...
 %         'EdgeColor','none','FontSize',fontsize+2,'FontWeight','bold')

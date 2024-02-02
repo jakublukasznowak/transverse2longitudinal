@@ -2,8 +2,8 @@
 function LS = int_ls_short (x,y,options)
 
 arguments
-    x (:,1) {mustBeReal, mustBeFinite, mustBeNonempty}
-    y (:,1) {mustBeReal, mustBeFinite, mustBeNonempty} = x
+    x (:,1) {mustBeReal, mustBeNonempty}
+    y (:,1) {mustBeReal, mustBeNonempty} = x
     options.Method (1,1) string {mustBeMember(options.Method,{'e-decay','integration'})} = 'e-decay'
     options.MaxLag (1,1) {mustBeInteger, mustBeFinite} = length(x)-1
     options.SubtractMean (1,1) logical = false

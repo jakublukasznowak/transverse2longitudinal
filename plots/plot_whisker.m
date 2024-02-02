@@ -44,7 +44,7 @@ end
 h = boxplotGroup(bginput,'Whisker',Inf,...
     'SecondaryLabels',cellfun(@(x) [x,'   '],levels,'UniformOutput',false),...
     'InterGroupSpace',2,'groupLabelType','vertical',...
-    'Colors',co,'GroupType','betweenGroups',...
+    'Colors',co,'GroupType','betweenGroups','Widths',0.8,...
     varargin{:});
 if ifdirs
     for i_g = 1:2:numel(h.boxplotGroup)
@@ -60,6 +60,7 @@ if ifdirs
         end
     end
 end
+h.axis.TickLabelInterpreter = 'latex';
 h.axis.View = [90 90];
 h.axis.Clipping = 'off';
 

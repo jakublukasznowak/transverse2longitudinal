@@ -89,7 +89,7 @@ end
 % Exclude segments
 exc_seg = ["RF05","CT03";  % periodic signal oscillations
            "RF07","CT03";  % noise
-           "RF04","CT02"];  % noise
+           "RF04","CT02"]; % noise
 for i_e = 1:size(exc_seg,1)
     ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
     MOM(ind_s,:) = [];
