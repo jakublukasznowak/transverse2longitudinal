@@ -65,10 +65,11 @@ print(fig,[plotpath,'_ar_uw'],'-dpng','-r300')
 
 %% (p,s) scatter
 
-fig = plot_xy(MOM,{'slp_psd_UX','slp_psd_VY','slp_psd_W'},...
+[fig,ax] = plot_xy(MOM,{'slp_psd_UX','slp_psd_VY','slp_psd_W'},...
     {'slp_sfc_UX','slp_sfc_VY','slp_sfc_W'},levels,'vars',ifdirs,0,{'hor2/3','ver5/3'},...
     'XLim',[0 2.5],'YLim',[0 1.5]);
-legend(cat(2,{'u','v','w'},levels),'Location','northwest','Interpreter','latex')
+plot(ax,5/3,2/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
+legend(cat(2,{'u','v','w'},levels,{'K41'}),'Location','northwest','Interpreter','latex')
 xlabel('$p$','Interpreter','latex')
 ylabel('$s$','Interpreter','latex')
 title(plane)

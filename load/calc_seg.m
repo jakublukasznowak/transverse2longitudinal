@@ -11,6 +11,7 @@ arguments
     options.TASLimit (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 0.8 % 
     options.MinLength (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 20e3 % m
     options.MaxTrend (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} = 0.002 % m/m
+    options.Title (1,1) string = "EXPERIMENT"
 end
 
 
@@ -41,6 +42,7 @@ for i_f = 1:Nf
     tas_m = movmean(DATA(i_f).TAS,floor(options.AltAvScale/tas*fsamp));
     mask_tas = tas_m > options.TASLimit*tas;
     
+    mask_2 = mask_alt & mask_hdg;
     mask_3 = mask_alt & mask_hdg & mask_tas;
     
     % Condition (4): minimum segment length
@@ -61,34 +63,62 @@ for i_f = 1:Nf
 
     
     if options.Plots
-        figure, hold on, grid on
-        plot(x,DATA(i_f).ALT)
-        plot(x,DATA(i_f).THDG,'.')
-        plot(x(mask_alt),DATA(i_f).ALT(mask_alt),'.')
-        plot(x(mask_hdg),DATA(i_f).ALT(mask_hdg)+20,'.')
-        plot(x(mask_len),DATA(i_f).ALT(mask_len)+40,'.')
-        plot(x(mask_trend),DATA(i_f).ALT(mask_trend)+60,'.')
-        legend({'alt','hdg','small dz/dx','small dh/dx','large length','small trend'})
-        title(DATA(i_f).flight)
-        xlabel('x [km]')
-
-        figure, hold on, grid on
-%         plot(x(2:end),   1e3*dzdx)
-        plot(x(2:end),   1e3*dzdx_m)
-        plot(x([2,end]), 1e3*[1 1]*options.AltDrvLimit,'Color','black')
-        plot(x([2,end]),-1e3*[1 1]*options.AltDrvLimit,'Color','black')
-        title(DATA(i_f).flight)
-        xlabel('x [km]')
-        ylabel('dz/dx [m/km]')
         
-        figure, hold on, grid on
-%         plot(x(2:end),   1e3*dhdx)
-        plot(x(2:end),   1e3*dhdx_m)
-        plot(x([2,end]), 1e3*[1 1]*options.HdgDrvLimit,'Color','black')
-        plot(x([2,end]),-1e3*[1 1]*options.HdgDrvLimit,'Color','black')
-        title(DATA(i_f).flight)
-        xlabel('x [km]')
-        ylabel('dh/dx [deg/km]')
+        set(groot,'defaultLineMarkerSize',10);
+        font = 14;
+        
+        f = figure('Color','white','PaperUnits','centimeters',...
+            'PaperSize',[36 20],'PaperPosition',[0 0 36 20]);
+
+        t = tiledlayout(3,1,'Parent',f);
+        
+        ax1 = nexttile([2 1]); hold on, grid on
+        plot(x,DATA(i_f).ALT,'.')
+        plot(x(mask_alt),DATA(i_f).ALT(mask_alt),'.')
+        plot(x(mask_2),DATA(i_f).ALT(mask_2)+100,'.')
+        plot(x(mask_3),DATA(i_f).ALT(mask_3)+200,'.')
+        plot(x(mask_len),DATA(i_f).ALT(mask_len)+300,'.')
+        plot(x(mask_trend),DATA(i_f).ALT(mask_trend)+400,'.')
+        legend({'$z$','$dz/dx$','+$d\psi/dx$','+TAS','+length','+trend'},'Interpreter','latex') %,'Location','best')
+        ylabel('Altitude [m]','Interpreter','latex')
+        
+        ax2 = nexttile; hold on, grid on
+        plot(x,DATA(i_f).THDG,'.')
+        plot(x(mask_hdg),DATA(i_f).THDG(mask_hdg),'.')
+        legend({'$\psi$','$d\psi/dx$'},'Interpreter','latex') %,'Location','best')
+        ylabel('Heading [deg]','Interpreter','latex')
+        
+        t.TileSpacing = 'compact';
+        t.Padding = 'compact';
+        
+        tit = title(t,join([options.Title,DATA(i_f).flight]));
+        xl = xlabel(t,'Distance [km]','Interpreter','latex');
+        
+        ax1.Box = 'on'; ax2.Box = 'on';
+        ax1.FontSize = font; ax2.FontSize = font;
+        tit.FontSize = font; xl.FontSize = font;
+%         ax1.TickLabelInterpreter = 'latex'; ax2.TickLabelInterpreter = 'latex';
+        ax2.YLim = [0 360];
+        
+        print(f,strcat('seg_',options.Title,'_',DATA(i_f).flight),'-dpng','-r300')
+
+%         figure, hold on, grid on
+% %         plot(x(2:end),   1e3*dzdx)
+%         plot(x(2:end),   1e3*dzdx_m)
+%         plot(x([2,end]), 1e3*[1 1]*options.AltDrvLimit,'Color','black')
+%         plot(x([2,end]),-1e3*[1 1]*options.AltDrvLimit,'Color','black')
+%         title(DATA(i_f).flight)
+%         xlabel('x [km]')
+%         ylabel('dz/dx [m/km]')
+%         
+%         figure, hold on, grid on
+% %         plot(x(2:end),   1e3*dhdx)
+%         plot(x(2:end),   1e3*dhdx_m)
+%         plot(x([2,end]), 1e3*[1 1]*options.HdgDrvLimit,'Color','black')
+%         plot(x([2,end]),-1e3*[1 1]*options.HdgDrvLimit,'Color','black')
+%         title(DATA(i_f).flight)
+%         xlabel('x [km]')
+%         ylabel('dh/dx [deg/km]')
         
 %         figure, hold on, grid on
 %         plot(x,tas_m)
@@ -97,6 +127,7 @@ for i_f = 1:Nf
 %         xlabel('x [km]')
 %         ylabel('TAS [m/s]')
     end
+        
     
     
     seg = table;

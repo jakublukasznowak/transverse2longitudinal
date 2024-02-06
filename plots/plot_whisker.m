@@ -60,7 +60,7 @@ if ifdirs
         end
     end
 end
-h.axis.TickLabelInterpreter = 'latex';
+% h.axis.TickLabelInterpreter = 'latex';
 h.axis.View = [90 90];
 h.axis.Clipping = 'off';
 

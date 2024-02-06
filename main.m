@@ -1,5 +1,3 @@
-
-
 %% Select campaign
 
 % plane = 'ATR-EUREC4A'; ifdirs = true;
@@ -247,18 +245,9 @@ plot_all
 print_table(MOM,{'alt','ls_W','length_km'},1,0)
 
 print_table(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
-print_table(MOM,{'e_ar_sfc_VU','e_ar_psd_VU','e_ar_sfc_WU','e_ar_psd_WU'})
+print_table(MOM,{'e_ar_sfc_VU','e_ar_psd_VU','e_ar_sfc_WU','e_ar_psd_WU'},0,2,["median","std"])
 
 print_table(MOM,{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
                  'slp_psd_UX','slp_psd_VY','slp_psd_W'})
 print_table(MOM,{'e_slp_sfc_UX','e_slp_sfc_VY','e_slp_sfc_W',...
-                 'e_slp_psd_UX','e_slp_psd_VY','e_slp_psd_W'})
-
-
-
-% annotation(f,'textbox',[0 .9 .1 .1],'String',ts{i},...
-%         'EdgeColor','none','FontSize',fontsize+2,'FontWeight','bold')
-%     
-% #!/bin/bash
-% pdfjam --nup 3x1 --scale 0.95 --papersize '{36cm,10cm}' pfig08*.pdf --outfile fig08.pdf
-% pdfjam --nup 3x1 --scale 0.95 --papersize '{36cm,10cm}' pfig_ex_08_x.pdf pfig_ex_08_y.pdf pfig08_z.pdf --outfile fig08ex.pdf
+                 'e_slp_psd_UX','e_slp_psd_VY','e_slp_psd_W'},0,2,["median","std"])
