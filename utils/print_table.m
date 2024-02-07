@@ -18,6 +18,15 @@ G = sortrows(groupsummary(MOM,"level",union(stats,"mean"),union(vars,{'alt'})),"
 T = groupsummary(MOM,[],union(stats,"mean"),union(vars,{'alt'})); T.level = "all";
 G = [G;T];
 
+fprintf(' %15s','Level')
+if ifcount
+    fprintf(' & %5s','N')
+end
+for i_v = 1:numel(vars)
+    fprintf(' & %*s',6+5+prec,vars{i_v})
+end
+fprintf(' \\\\ \n')
+
 for i_l = 1:size(G,1)
     fprintf(' %15s',G.level(i_l))
     if ifcount

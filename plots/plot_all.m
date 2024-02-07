@@ -15,8 +15,9 @@ dr = MOM.dr(i_s);
 for i_v = 1:Nvar
     var = vars{i_v};
     
-    edr_sfc( detrend(TURB(i_s).(var)), dr,sfc_fit_range,B(i_v),'Method',sfc_method,...
-        'FitPoints',sfc_fit_points,'Plot',true,'PlotXLim',[dr 400],'PlotYLim',[1e-2 0.3]);
+    fit_sfc( detrend(TURB(i_s).(var)), dr, sfc_fit_range, ...
+        'Method',sfc_method, 'FitPoints',sfc_fit_points, ...
+        'Plot',true, 'PlotXLim',[dr 400], 'PlotYLim',[1e-2 0.3]);
     
     ylabel(['$D_',lower(var(1)),'\,[\mathrm{m^2\,s^{-2}}]$'],'Interpreter','latex')
     title(join([plane,MOM.flight(i_s),MOM.name(i_s),round(MOM.alt(i_s)),'m']))
@@ -24,19 +25,49 @@ for i_v = 1:Nvar
 end
 
 
+
+% i_s = find( MOM.flight==ex_s(1) & MOM.name==ex_s(2) );
+% dr = MOM.dr(i_s);
+% 
+% for i_v = 1:Nvar
+%     var = vars{i_v};
+%     
+%     edr_sfc( detrend(TURB(i_s).(var)), dr,sfc_fit_range,B(i_v),'Method',sfc_method,...
+%         'FitPoints',sfc_fit_points,'Plot',true,'PlotXLim',[dr 400],'PlotYLim',[1e-2 0.3]);
+%     
+%     ylabel(['$D_',lower(var(1)),'\,[\mathrm{m^2\,s^{-2}}]$'],'Interpreter','latex')
+%     title(join([plane,MOM.flight(i_s),MOM.name(i_s),round(MOM.alt(i_s)),'m']))
+%     print(gcf,join([plotpath,'ex','sfc',var,string(i_s)],'_'),'-dpng','-r300')
+% end
+
+
 %% P examples
 
 for i_v = 1:Nvar
     var = vars{i_v};
     
-    edr_psd( detrend(TURB(i_s).(var)), dr,psd_fit_range,C(i_v),'Method',psd_method,...
-        'FitPoints',psd_fit_points,'Plot',true,'PlotXLim',[2*dr 400],'PlotYLim',[1e-4 1],...
-        'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
+    fit_psd( detrend(TURB(i_s).(var)), dr, psd_fit_range, ...
+        'Method',psd_method, 'FitPoints',psd_fit_points, ...
+        'WindowLength',floor(psd_win_length/dr), 'WindowOverlap',floor(psd_win_overlap/dr), ...
+        'Plot',true, 'PlotXLim',[2*dr 400], 'PlotYLim',[1e-4 1]);
     
     ylabel(['$P_',lower(var(1)),'\,[\mathrm{m^2\,s^{-2}\,rad^{-1}}]$'],'Interpreter','latex')
     title(join([plane,MOM.flight(i_s),MOM.name(i_s),round(MOM.alt(i_s)),'m']))
     print(gcf,join([plotpath,'ex','psd',var,string(i_s)],'_'),'-dpng','-r300')
 end
+
+
+% for i_v = 1:Nvar
+%     var = vars{i_v};
+%     
+%     edr_psd( detrend(TURB(i_s).(var)), dr,psd_fit_range,C(i_v),'Method',psd_method,...
+%         'FitPoints',psd_fit_points,'Plot',true,'PlotXLim',[2*dr 400],'PlotYLim',[1e-4 1],...
+%         'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
+%     
+%     ylabel(['$P_',lower(var(1)),'\,[\mathrm{m^2\,s^{-2}\,rad^{-1}}]$'],'Interpreter','latex')
+%     title(join([plane,MOM.flight(i_s),MOM.name(i_s),round(MOM.alt(i_s)),'m']))
+%     print(gcf,join([plotpath,'ex','psd',var,string(i_s)],'_'),'-dpng','-r300')
+% end
 
 
 %% (Pv/Pu,Dv/Du) scatter

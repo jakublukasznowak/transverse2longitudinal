@@ -1,14 +1,37 @@
 
-function [edrFixed,slpFree,e,fig] = edr_sfc (x,dr,fit_range,C,options)
+% Calculate 2nd order structure function for the input vector X representing
+% wind velocity fluctuations with spatial distance between sample points DR 
+% [in meters] in the range of scales defined by the 2-element vector FIT_RANGE
+% [in meters] and fit the two formulas in log-log coordinates
+%       (1) D(r) = O*r^{2/3}    to get O
+%       (2) D(r) = Ostar*r^slp  to get slp
+% plus provide error info E and plot optional diagnostic figure FIG.
+%
+% Optional Name-Value arguments:
+% 'Method': 
+%       'direct'    - evaluates structure function at all
+%                     possible displacements which belong to the
+%                     FIT_RANGE and use those values in the fit.
+%       'logmean'   - (default) evaluates structure function at all possible
+%                     displacements which belong to the FIT_RANGE but
+%                     averages those values in several log-equally-distributed 
+%                     bins covering the FIT_RANGE before the fit is performed
+% 'FitPoints': number of fit points for the logmean method
+% 'Slope': use another fixed exponent than 2/3
+% 'Plot': selects whether to show a diagnostic plot (true/false)
+% 'PlotXLim': plot axes XLim [in meters]
+% 'PlotYLim': plot axes YLim [in meters]
+
+
+function [O,slp,e,fig] = fit_sfc (x,dr,fit_range,options)
 
 arguments
     x (:,1) {mustBeReal, mustBeFinite, mustBeNonempty}
     dr (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} % = TAS/samp
     fit_range (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(fit_range,x,dr)}
-    C (1,1) {mustBeReal, mustBeFinite, mustBeNonempty} = 2.0
-    options.Slope (1,1) {mustBeReal, mustBeFinite, mustBeNonempty} = 2/3
     options.Method (1,1) string {mustBeMember(options.Method,{'direct','logmean'})} = 'logmean'
     options.FitPoints (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = 10
+    options.Slope (1,1) {mustBeReal, mustBeFinite, mustBeNonempty} = 2/3
     options.Plot (1,1) logical = false
     options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotXLim,x,dr)} = fit_range
     options.PlotYLim (1,2) {mustBeReal, mustBeNonempty} = [-inf inf];
@@ -52,30 +75,31 @@ end
 
 slpFixed = options.Slope;
 
-offsetFixed = mean(log(sfc_fit)-slpFixed*log(rv_fit));
-edrFixed = (exp(offsetFixed)/C)^(1/slpFixed);
+logO = mean(log(sfc_fit)-slpFixed*log(rv_fit));
+e.logO = std(log(sfc_fit)-slpFixed*log(rv_fit))/sqrt(length(rv_fit)); % standard error
 
-e.offsetFixed = std(log(sfc_fit)-slpFixed*log(rv_fit))/sqrt(length(rv_fit)); % standard error from LS fit
-e.edrFixed = edrFixed/slpFixed*e.offsetFixed; % error propagation
+O = exp(logO);
+e.O = O*e.logO; % error propagation
 
 
 % Fit (2): free slope
 
 [p,S] = polyfit(log(rv_fit),log(sfc_fit),1);
 
-slpFree = p(1);
-offsetFree = p(2);
-edrFree = (exp(offsetFree)/C)^(1/slpFree);
+slp = p(1);
+logOstar = p(2);
 
 covarM = (inv(S.R)*inv(S.R)')*S.normr^2/S.df; % covariance matix
-e.slopeFree  = sqrt(covarM(1,1));
-e.offsetFree = sqrt(covarM(2,2));
-e.edrFree    = edrFree/slpFree * sqrt( e.offsetFree^2 + (e.slopeFree*log(edrFree))^2 ); % error propagation
+e.slp  = sqrt(covarM(1,1));
+% e.logOstar = sqrt(covarM(2,2));
+
+Ostar = exp(logOstar);
+% e.Ostar = Ostar*e_logOstar;
 
 
 % Linear correlation
 
-corrM = corrcoef(log(rv_fit),log(sfc_fit));
+corrM = corrcoef(log(rv_fit),log(sfc_fit)); % correlation matix
 e.R2 = corrM(1,2);
 
 
@@ -99,21 +123,16 @@ if options.Plot
     plot(rv,sfc,'.','Color',co(1,:),'MarkerSize',8)
     plot(rv_fit,sfc_fit,'^','MarkerFaceColor',co(2,:),'MarkerSize',8)
     
-    plot(rv_fit,C*(rv_fit*edrFree).^slpFree,'-','Color',co(4,:),'LineWidth',2)
-    plot(rv_fit,C*(rv_fit*edrFixed).^slpFixed,'-','Color',co(5,:),'LineWidth',2)
+    plot(rv_fit,Ostar*rv_fit.^slp,'-','Color',co(4,:),'LineWidth',2)
+    plot(rv_fit,O*rv_fit.^slpFixed,'-','Color',co(5,:),'LineWidth',2)
 
     xlabel('$r\,[\mathrm{m}]$','Interpreter','latex')
     ylabel('$D\,[\mathrm{m^2\,s^{-2}}]$','Interpreter','latex')
     
     legend({'$D$','fit points',...
-        ['$s=$ ',num2str(slpFree,'%.2f')],...
+        ['$s=$ ',num2str(slp,'%.2f')],...
         '$s=$ 2/3'},...
         'Location','northwest','Interpreter','latex')
-%     text(0.66,0.10,['$\epsilon = ',sprintf('%.2f',edrFixed/10^floor(log10(edrFixed))),'\cdot10^',...
-%         sprintf('{%d}',floor(log10(edrFixed))),'\,\mathrm{m^2\,s^{-3}}$',...
-%         newline,'$R = ',sprintf('%.3f',e.R2),'$'],...
-%         'FontSize',12,'Units','Normalized',...
-%         'HorizontalAlignment','left','Interpreter','latex')
     
 else
     fig = [];

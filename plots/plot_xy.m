@@ -27,7 +27,7 @@ Nvar = numel(xvars);
 Nlvl = numel(levels);
 
 
-[fig,ax,co,~,mk] = fig16x12('linlin',[1 1],varargin{:});
+[fig,ax,co,~,mk] = fig16x12('linlin',[1 1],'on',varargin{:});
 
 
 if strcmp(coloring,'vars')

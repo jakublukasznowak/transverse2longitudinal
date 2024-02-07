@@ -68,7 +68,7 @@ addpath(genpath(myprojectpath))
 
 datapath = [mydatapath,filesep,plane];
 
-plotpath = [myprojectpath,filesep,'figures'];
+plotpath = [myprojectpath,filesep,'figures_new'];
 if ~isfolder(plotpath)
     mkdir(plotpath)
 end
@@ -114,13 +114,7 @@ end
 
 
 
-%% Calculate dissipation
-
-% Constants
-
-B_L = 2.0; B_T = 2.6;
-C_L = 0.5; C_T = 0.66;
-
+%% Compute structure functions and power spectra
 
 % Settings
 
@@ -133,17 +127,14 @@ psd_win_length = 1000; % m
 psd_win_overlap = 500; % m
 
 vars = {'W','UX','VY'};
-B = [B_T B_L B_T];
-C = [C_T C_L C_T];
 
 
-% Compute
-
-disp('Compute dissipation rate ...')
+% Compute and fit
 
 Nvar = numel(vars);
 Nseg = size(MOM,1);
-E = struct([]);
+fprintf('Number of segments: %d\n',Nseg)
+disp('Compute structure functions and power spectra ...')
 
 for i_v = 1:Nvar
     var = vars{i_v}; fprintf('%2s',var)
@@ -152,19 +143,21 @@ for i_v = 1:Nvar
         fprintf(' %d',i_s)
         dr = MOM.dr(i_s);
 
-        [MOM.(['edr_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = edr_sfc( detrend(TURB(i_s).(var)),...
-            dr,sfc_fit_range,B(i_v),'Method',sfc_method,'FitPoints',sfc_fit_points );
+        [MOM.(['off_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = ...
+            fit_sfc( detrend(TURB(i_s).(var)), dr, sfc_fit_range, ...
+            'Method',sfc_method, 'FitPoints',sfc_fit_points );
         
-        [MOM.(['edr_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),ep] = edr_psd( detrend(TURB(i_s).(var)),...
-            dr,psd_fit_range,C(i_v),'Method',psd_method,'FitPoints',psd_fit_points,...
-            'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
+        MOM.(['e_off_sfc_',var])(i_s) = es.O;
+        MOM.(['e_slp_sfc_',var])(i_s) = es.slp;
         
-        E(1).(['sfc_',var])(i_s) = es;
-        E(1).(['psd_',var])(i_s) = ep;
+        [MOM.(['off_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),ep] = ...
+            fit_psd( detrend(TURB(i_s).(var)), dr, psd_fit_range, ...
+            'Method',psd_method, 'FitPoints',psd_fit_points, ...
+            'WindowLength',floor(psd_win_length/dr), 'WindowOverlap',floor(psd_win_overlap/dr) );
+        
+        MOM.(['e_off_psd_',var])(i_s) = ep.O;
+        MOM.(['e_slp_psd_',var])(i_s) = ep.slp;
     end
-    
-    E.(['sfc_',var]) = struct2table(E.(['sfc_',var]));
-    E.(['psd_',var]) = struct2table(E.(['psd_',var]));
     
     MOM.(['slp_psd_',var]) = - MOM.(['slp_psd_',var]);
     
@@ -172,29 +165,7 @@ for i_v = 1:Nvar
 end
 
 
-
-%% Dependent parameters
-
-% sfc and psd prefactors
-
-for i_v = 1:Nvar
-    var = vars{i_v};
-    
-    MOM.(['off_sfc_',var]) = B(i_v)*MOM.(['edr_sfc_',var]).^(2/3);
-    MOM.(['off_psd_',var]) = C(i_v)*MOM.(['edr_psd_',var]).^(2/3);
-    
-    MOM.(['e_off_sfc_',var]) = MOM.(['off_sfc_',var]) .* E.(['sfc_',var]).offsetFixed;
-    MOM.(['e_off_psd_',var]) = MOM.(['off_psd_',var]) .* E.(['psd_',var]).offsetFixed;
-    
-    MOM.(['er_off_sfc_',var]) = E.(['sfc_',var]).offsetFixed;
-    MOM.(['er_off_psd_',var]) = E.(['psd_',var]).offsetFixed;
-    
-    MOM.(['e_slp_sfc_',var]) = E.(['sfc_',var]).slopeFree;
-    MOM.(['e_slp_psd_',var]) = E.(['psd_',var]).slopeFree;
-end
-
-
-% Anisotropy
+% Ratios
 
 MOM.ar_sfc_VU = MOM.off_sfc_VY./MOM.off_sfc_UX;
 MOM.ar_sfc_WU = MOM.off_sfc_W ./MOM.off_sfc_UX;
@@ -203,6 +174,8 @@ MOM.ar_sfc_WV = MOM.off_sfc_W ./MOM.off_sfc_VY;
 MOM.ar_psd_VU = MOM.off_psd_VY./MOM.off_psd_UX;
 MOM.ar_psd_WU = MOM.off_psd_W ./MOM.off_psd_UX;
 MOM.ar_psd_WV = MOM.off_psd_W ./MOM.off_psd_VY;
+
+% Error propagation for ratios
 
 MOM.e_ar_sfc_VU = MOM.ar_sfc_VU .* sqrt( (MOM.e_off_sfc_VY./MOM.off_sfc_VY).^2 + (MOM.e_off_sfc_UX./MOM.off_sfc_UX).^2 );
 MOM.e_ar_sfc_WU = MOM.ar_sfc_WU .* sqrt( (MOM.e_off_sfc_W ./MOM.off_sfc_W ).^2 + (MOM.e_off_sfc_UX./MOM.off_sfc_UX).^2 );
@@ -213,12 +186,117 @@ MOM.e_ar_psd_WU = MOM.ar_psd_WU .* sqrt( (MOM.e_off_psd_W ./MOM.off_psd_W ).^2 +
 MOM.e_ar_psd_WV = MOM.ar_psd_WV .* sqrt( (MOM.e_off_psd_W ./MOM.off_psd_W ).^2 + (MOM.e_off_psd_VY./MOM.off_psd_VY).^2 );
 
 
-% Dissipation rates after reversal of longi/trans
 
-MOM.edr_sfc_UY = MOM.edr_sfc_UX * (B_L/B_T).^(3/2);
-MOM.edr_sfc_VX = MOM.edr_sfc_VY * (B_T/B_L).^(3/2);
-MOM.edr_psd_UY = MOM.edr_psd_UX * (C_L/C_T).^(3/2);
-MOM.edr_psd_VX = MOM.edr_psd_VY * (C_T/C_L).^(3/2);
+
+%% Calculate dissipation
+
+% % Constants
+% 
+% B_L = 2.0; B_T = 2.6;
+% C_L = 0.5; C_T = 0.66;
+% 
+% 
+% % Settings
+% 
+% sfc_method = "logmean";
+% sfc_fit_points = 5;
+% 
+% psd_method = "logmean";
+% psd_fit_points = 5;
+% psd_win_length = 1000; % m
+% psd_win_overlap = 500; % m
+% 
+% vars = {'W','UX','VY'};
+% B = [B_T B_L B_T];
+% C = [C_T C_L C_T];
+% 
+% 
+% % Compute
+% 
+% disp('Compute dissipation rate ...')
+% 
+% Nvar = numel(vars);
+% Nseg = size(MOM,1);
+% E = struct([]);
+% 
+% for i_v = 1:Nvar
+%     var = vars{i_v}; fprintf('%2s',var)
+%     
+%     for i_s = 1:Nseg
+%         fprintf(' %d',i_s)
+%         dr = MOM.dr(i_s);
+% 
+%         [MOM.(['edr_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = edr_sfc( detrend(TURB(i_s).(var)),...
+%             dr,sfc_fit_range,B(i_v),'Method',sfc_method,'FitPoints',sfc_fit_points );
+% %         print(f,join([[myprojectpath,filesep,'figures',filesep,'sfc',filesep,plane],...
+% %             MOM.flight(i_s),MOM.name(i_s),var],'_'),'-dpng','-r300')
+%         
+%         [MOM.(['edr_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),ep] = edr_psd( detrend(TURB(i_s).(var)),...
+%             dr,psd_fit_range,C(i_v),'Method',psd_method,'FitPoints',psd_fit_points,...
+%             'WindowLength',floor(psd_win_length/dr),'WindowOverlap',floor(psd_win_overlap/dr) );
+% %         print(f,join([[myprojectpath,filesep,'figures',filesep,'psd',filesep,plane],...
+% %             MOM.flight(i_s),MOM.name(i_s),var],'_'),'-dpng','-r300')
+%         
+%         E(1).(['sfc_',var])(i_s) = es;
+%         E(1).(['psd_',var])(i_s) = ep;
+%     end
+%     
+%     E.(['sfc_',var]) = struct2table(E.(['sfc_',var]));
+%     E.(['psd_',var]) = struct2table(E.(['psd_',var]));
+%     
+%     MOM.(['slp_psd_',var]) = - MOM.(['slp_psd_',var]);
+%     
+%     fprintf('\n')
+% end
+
+
+
+%% Dependent parameters
+
+% % sfc and psd prefactors
+% 
+% for i_v = 1:Nvar
+%     var = vars{i_v};
+%     
+%     MOM.(['off_sfc_',var]) = B(i_v)*MOM.(['edr_sfc_',var]).^(2/3);
+%     MOM.(['off_psd_',var]) = C(i_v)*MOM.(['edr_psd_',var]).^(2/3);
+%     
+%     MOM.(['e_off_sfc_',var]) = MOM.(['off_sfc_',var]) .* E.(['sfc_',var]).offsetFixed;
+%     MOM.(['e_off_psd_',var]) = MOM.(['off_psd_',var]) .* E.(['psd_',var]).offsetFixed;
+%     
+%     MOM.(['er_off_sfc_',var]) = E.(['sfc_',var]).offsetFixed;
+%     MOM.(['er_off_psd_',var]) = E.(['psd_',var]).offsetFixed;
+%     
+%     MOM.(['e_slp_sfc_',var]) = E.(['sfc_',var]).slopeFree;
+%     MOM.(['e_slp_psd_',var]) = E.(['psd_',var]).slopeFree;
+% end
+% 
+% 
+% % Anisotropy
+% 
+% MOM.ar_sfc_VU = MOM.off_sfc_VY./MOM.off_sfc_UX;
+% MOM.ar_sfc_WU = MOM.off_sfc_W ./MOM.off_sfc_UX;
+% MOM.ar_sfc_WV = MOM.off_sfc_W ./MOM.off_sfc_VY;
+% 
+% MOM.ar_psd_VU = MOM.off_psd_VY./MOM.off_psd_UX;
+% MOM.ar_psd_WU = MOM.off_psd_W ./MOM.off_psd_UX;
+% MOM.ar_psd_WV = MOM.off_psd_W ./MOM.off_psd_VY;
+% 
+% MOM.e_ar_sfc_VU = MOM.ar_sfc_VU .* sqrt( (MOM.e_off_sfc_VY./MOM.off_sfc_VY).^2 + (MOM.e_off_sfc_UX./MOM.off_sfc_UX).^2 );
+% MOM.e_ar_sfc_WU = MOM.ar_sfc_WU .* sqrt( (MOM.e_off_sfc_W ./MOM.off_sfc_W ).^2 + (MOM.e_off_sfc_UX./MOM.off_sfc_UX).^2 );
+% MOM.e_ar_sfc_WV = MOM.ar_sfc_WV .* sqrt( (MOM.e_off_sfc_W ./MOM.off_sfc_W ).^2 + (MOM.e_off_sfc_VY./MOM.off_sfc_VY).^2 );
+% 
+% MOM.e_ar_psd_VU = MOM.ar_psd_VU .* sqrt( (MOM.e_off_psd_VY./MOM.off_psd_VY).^2 + (MOM.e_off_psd_UX./MOM.off_psd_UX).^2 );
+% MOM.e_ar_psd_WU = MOM.ar_psd_WU .* sqrt( (MOM.e_off_psd_W ./MOM.off_psd_W ).^2 + (MOM.e_off_psd_UX./MOM.off_psd_UX).^2 );
+% MOM.e_ar_psd_WV = MOM.ar_psd_WV .* sqrt( (MOM.e_off_psd_W ./MOM.off_psd_W ).^2 + (MOM.e_off_psd_VY./MOM.off_psd_VY).^2 );
+% 
+% 
+% % Dissipation rates after reversal of longi/trans
+% 
+% MOM.edr_sfc_UY = MOM.edr_sfc_UX * (B_L/B_T).^(3/2);
+% MOM.edr_sfc_VX = MOM.edr_sfc_VY * (B_T/B_L).^(3/2);
+% MOM.edr_psd_UY = MOM.edr_psd_UX * (C_L/C_T).^(3/2);
+% MOM.edr_psd_VX = MOM.edr_psd_VY * (C_T/C_L).^(3/2);
 
 
 
@@ -226,10 +304,10 @@ MOM.edr_psd_VX = MOM.edr_psd_VY * (C_T/C_L).^(3/2);
 
 disp('Compute integral length scale ...')
 
-var = 'W';
+var = 'W'; fprintf('%2s','L')
 for i_s = 1:Nseg
     fprintf(' %d',i_s)
-    MOM.(['ls_',var])(i_s) = int_ls_short(detrend(TURB(i_s).(var)),'Method','e-decay')*MOM.dr(i_s);
+    MOM.int_scale(i_s) = int_ls_short(detrend(TURB(i_s).(var)),'Method','e-decay')*MOM.dr(i_s);
 end
 fprintf('\n')
 
@@ -242,7 +320,7 @@ plot_all
 
 %% Summmary of segments
 
-print_table(MOM,{'alt','ls_W','length_km'},1,0)
+print_table(MOM,{'alt','int_scale','length_km'},1,0)
 
 print_table(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
 print_table(MOM,{'e_ar_sfc_VU','e_ar_psd_VU','e_ar_sfc_WU','e_ar_psd_WU'},0,2,["median","std"])
