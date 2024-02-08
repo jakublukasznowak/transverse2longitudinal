@@ -1,4 +1,7 @@
 
+% Print latex-formatted summary table of statistics for levels
+
+
 function print_table(MOM,vars,ifcount,prec,stats)
 
 if nargin<5 || isempty(stats)
@@ -11,7 +14,7 @@ if nargin<3 || isempty(ifcount)
     ifcount = false;
 end
 
-MOM.vstop = MOM.top - MOM.alt;
+% MOM.vstop = MOM.top - MOM.alt;
 MOM.length_km = MOM.length/1000;
 
 G = sortrows(groupsummary(MOM,"level",union(stats,"mean"),union(vars,{'alt'})),"mean_alt",'descend');

@@ -1,6 +1,4 @@
 
-function indlist = mask2ind (logvec)
-
 % MASK2IND converts a mask from logical vector into a list of start/end
 % indices.
 %
@@ -11,6 +9,8 @@ function indlist = mask2ind (logvec)
 % If the LOGVEC starts with TRUE, INDLIST(1,1) is 1.
 % If the LOGVEC ends with TRUE, INDLIST(2,end) is length(LOGVEC).
 
+
+function indlist = mask2ind (logvec)
 
 logvec(isnan(logvec)) = 0;
 Lc = length(logvec);

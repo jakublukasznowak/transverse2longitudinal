@@ -1,4 +1,9 @@
 
+% Detect horizontal flight segments based on the small derivatives of
+% altitude and true heading with respect ot distance.
+% See Appendix B of the manuscript for description of the criteria.
+
+
 function SEG = calc_seg(DATA,options)
 
 arguments

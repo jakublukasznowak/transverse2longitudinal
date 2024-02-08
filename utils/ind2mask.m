@@ -1,4 +1,7 @@
 
+% IND2MASK converts a mask from a list of start/end indices into a logical
+% vector
+
 function mask = ind2mask (indlist,L)
 
 if nargin<2

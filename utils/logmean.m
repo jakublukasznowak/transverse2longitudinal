@@ -1,8 +1,9 @@
 
-function [xnew,ynew] = logmean (x,y,Nbin)
-
 % LOGMEAN averages the values from two input vectors X and Y in NBIN bins
 % which are log-equally distributed across the range of X values.
+
+
+function [xnew,ynew] = logmean (x,y,Nbin)
 
 bin_edge = exp( linspace(log(min(x)),log(max(x)),Nbin+1)' );
 bin_edge(1) = min(x);
@@ -11,10 +12,6 @@ bin_ind = discretize(x,bin_edge);
 
 xnew = accumarray(bin_ind(:),x(:),[],@mean);
 ynew = accumarray(bin_ind(:),y(:),[],@mean);
-
-% TODO: Consider whether it is better to average in log-space, i.e.:
-% xnew = exp( accumarray(bin_ind,log(x),[],@mean) );
-% ynew = exp( accumarray(bin_ind,log(y),[],@mean) );
 
 emptyBins = ~ismember((1:Nbin)',bin_ind);
 Neb = sum(emptyBins);

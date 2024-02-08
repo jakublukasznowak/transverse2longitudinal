@@ -1,4 +1,9 @@
 
+% Rotate horizontal wind velocity component from geographical
+% eastward/northward (u/v) to longitudinal/lateral (ux/vy) with respect to
+% the aircraft using true heading angle
+
+
 function TURB = uv2uxvy (TURB)
 
 % avscale = 1e3; % m

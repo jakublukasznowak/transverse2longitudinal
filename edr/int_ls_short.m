@@ -1,4 +1,17 @@
 
+% Calculate integral length scale LS [in points] based on the correlation
+% function of data vectors X and Y (i.e. autocorrelation if Y=X,
+% crosscorrelation otherwise).
+%
+% Optional Name-Value arguments:
+% 'Method':
+%       'e-decay'     -  (default) LS is the crossing of exp(-1) level
+%       'integration' -  LS is the integral of correlation function up to
+%                        the first zero crossing
+% 'SubstractMean': whether to substract mean from X and Y before
+% calculating correlation function (true/false)
+
+
 function LS = int_ls_short (x,y,options)
 
 arguments
@@ -10,6 +23,7 @@ arguments
 end
 
 
+% Substract mean
 if options.SubtractMean
     xp = x - mean(x,'omitnan');
     yp = y - mean(y,'omitnan');
@@ -18,14 +32,18 @@ else
     yp = y;
 end
 
+% (Co)variance
 Fxy = mean(xp.*yp,'omitnan');
 
-
+% Select critical limit value
 if strcmp(options.Method,'e-decay')
     lim = exp(-1);
 elseif strcmp(options.Method,'integration')
     lim = 0;
 end
+
+
+% Iterate by calculating correlation function until the limit is reached
 
 lag = 0; lag1 = 0; lag2 = 0; 
 rho1 = 1; rho2 = 1;
@@ -46,9 +64,11 @@ while rho2>lim && lag<options.MaxLag
         
 end
 
+
+% Interpolate to get precise limit crossing position
 LC = interp1( [rho1,rho2], [lag1,lag2], lim );
 
-
+% Integrate until the limit crossing in the case of intergration method
 if strcmp(options.Method,'integration')
     R = nan(lag2,1);
     for lag = 0:lag2-1
