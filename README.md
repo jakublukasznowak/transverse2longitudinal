@@ -14,12 +14,12 @@ The analysis requires access to the datasets which can be downloaded from the pu
 - [NCAR/NSF C-130 Navigation, State Parameter, and Microphysics HRT (25 sps) Data. doi.org/10.5065/D69K48JK](https://data.eol.ucar.edu/dataset/89.002)
 - [NSF/NCAR C130 Radar, Lidar and Radiometer Integrated Dataset. doi.org/10.26023/8KEJ-BQNG-W808](https://data.eol.ucar.edu/dataset/89.159)
 - [UC Irvine 40-hz Probes - netCDF format. doi.org/10.26023/KP56-KFJS-VC07](https://data.eol.ucar.edu/dataset/111.033)
-and Table 1 from Carman, at al. 2012: Observational constraints on entrainment and the entrainment interface layer in stratocumulus(https://doi.org/10.5194/acp-12-11135-2012) which can be found here in 'aux_data'.
+- Table 1 from [Carman, at al. 2012](https://doi.org/10.5194/acp-12-11135-2012) which can be also found here in `aux_data`.
 
 
 The code was developed in MATLAB R2019b. The functionality in other versions of this environment was not tested.
 
 Two external packages are used:
-- YAML 1.1 parser and emitter for MATLAB by Martin Koch from https://www.mathworks.com/matlabcentral/fileexchange/106765-yaml
-- boxplotGroup by Adam Danz from https://www.mathworks.com/matlabcentral/fileexchange/74437-boxplotgroup
+- [YAML 1.1 parser and emitter for MATLAB](https://www.mathworks.com/matlabcentral/fileexchange/106765-yaml) by Martin Koch
+- [boxplotGroup](https://www.mathworks.com/matlabcentral/fileexchange/74437-boxplotgroup) by Adam Danz
 
