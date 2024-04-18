@@ -36,16 +36,28 @@ function [O,slp,e,fig] = fit_psd (x,dr,fit_range,options)
 arguments
     x (:,1) {mustBeReal, mustBeFinite, mustBeNonempty}
     dr (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} % = TAS/samp
-    fit_range (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(fit_range,x,dr)}
+    fit_range (1,2) {mustBePositive, mustBeFinite, mustBeNonempty} 
     options.Method (1,1) string {mustBeMember(options.Method,{'direct','logmean'})} = 'logmean'
-    options.FitPoints (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = 20
+    options.FitPoints (1,1) {mustBeInteger, mustBeFinite, mustBeNonempty, mustBeGreaterThan(options.FitPoints,1)} = 20
     options.WindowLength (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = floor(length(x)/2)
     options.WindowOverlap (1,1) {mustBeInteger, mustBeNonnegative, mustBeFinite, mustBeNonempty} = ceil(length(x)/4)
     options.Slope (1,1) {mustBeReal, mustBeFinite, mustBeNonempty} = -5/3
     options.Plot (1,1) logical = false
-    options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotXLim,x,dr)} = fit_range
+    options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty} = fit_range
     options.PlotYLim (1,2) {mustBeReal, mustBeNonempty} = [-inf inf];
     
+end
+
+
+% Check if the fit range is valid
+
+if fit_range(1)<2*dr || fit_range(2)>dr*options.WindowLength
+    if fit_range(1)<2*dr
+        fit_range(1) = 2*dr;
+    else
+        fit_range(2) = dr*options.WindowLength;
+    end
+    warning('FIT_PSD:InvalidFitRange','Invalid fit range was changed to [%.2f %.2f].',fit_range(1),fit_range(2))
 end
 
 
@@ -53,10 +65,6 @@ end
 
 r1 = fit_range(1); 
 r2 = fit_range(2);
-if r2>dr*options.WindowLength
-    r2 = dr*options.WindowLength;
-    fprintf('Warning in EDR_PSD: Fitting range modified to [%.2f %.2f] to comply with the pwelch window length.\n',r1,r2)
-end
 w1 = 2*pi*dr/r2;
 w2 = 2*pi*dr/r1; 
 
@@ -75,12 +83,18 @@ ind1 = find(wv>=w1,1,'first');
 ind2 = find(wv<=w2,1,'last');
 wv_fit = wv(ind1:ind2);
 psd_fit = psd(ind1:ind2);
+Li = length(wv_fit);
+
+if Li<2
+    throw(MException('FIT_PSD:TooFewFitPoints','Number of fit points must be at least 2.'))
+end
 
 
 % Average PSD in log-equal bins (for LOGMEAN method)
 
 if strcmp(options.Method,'logmean')
     [wv_fit,psd_fit] = logmean(wv_fit,psd_fit,options.FitPoints);
+    e.N = length(psd_fit);
 end
 
 
@@ -131,7 +145,7 @@ if options.Plot
     plot(rv_fit,Ostar*wv_fit.^slp,'-','Color',co(4,:),'LineWidth',2)
     plot(rv_fit,O*wv_fit.^slpFixed,'-','Color',co(5,:),'LineWidth',2)
 
-    xlabel('$r\,[\mathrm{m}]$','Interpreter','latex')
+    xlabel('$\lambda\,[\mathrm{m}]$','Interpreter','latex')
     ylabel('$P\,[\mathrm{m^2\,s^{-2}\,rad^{-1}}]$','Interpreter','latex')
     
     legend({'$P$','fit points',...
@@ -144,23 +158,4 @@ else
 end
 
 
-end
-
-
-function mustBeValidRange(a,x,dr)
-    if ~ge(a(1),dr*2)
-        eid = 'Range:firstTooLow';
-        msg = sprintf('Fitting range must be within [dr*2 dr*length(x)] = [%.2f %.2f].',dr*2,dr*length(x));
-        throwAsCaller(MException(eid,msg))
-    end
-    if ~le(a(2),length(x)*dr)
-        eid = 'Range:lastTooHigh';
-        msg = sprintf('Fitting range must be within [dr*2 dr*length(x)] = [%.2f %.2f].',dr*2,dr*length(x));
-        throwAsCaller(MException(eid,msg))
-    end
-    if ge(a(1),a(2))
-        eid = 'Range:notIncreasing';
-        msg = 'Fitting range must be of nonzero length.';
-        throwAsCaller(MException(eid,msg))
-    end
 end

@@ -92,7 +92,7 @@
 addpath(genpath(myprojectpath))
 datapath = [mydatapath,filesep,plane];
 
-plotpath = [myprojectpath,filesep,'figures'];
+% plotpath = [myprojectpath,filesep,'figures'];
 if ~isfolder(plotpath), mkdir(plotpath), end
 plotpath = [plotpath,filesep,plane];
 
@@ -104,8 +104,8 @@ plotpath = [plotpath,filesep,plane];
 
 if strcmp(plane,'ATR-EUREC4A')
     
-    sfc_fit_range = [8 40];
-    psd_fit_range = [16 80];
+%     sfc_fit_range = [8 40];
+%     psd_fit_range = [16 80];
     ex_s = ["RF12","R2B"];
     ifdirs = true;
     
@@ -119,8 +119,8 @@ if strcmp(plane,'ATR-EUREC4A')
 
 elseif strcmp(plane,'C130-RICO')
     
-    sfc_fit_range = [8 40];
-    psd_fit_range = [16 80];
+%     sfc_fit_range = [8 40];
+%     psd_fit_range = [16 80];
     ex_s = ["RF06","SC01"];
     ifdirs = false;
     
@@ -133,8 +133,8 @@ elseif strcmp(plane,'C130-RICO')
 
 elseif strcmp(plane,'C130-VOCALS-REx')
     
-    sfc_fit_range = [8 40];
-    psd_fit_range = [16 80];
+%     sfc_fit_range = [8 40];
+%     psd_fit_range = [16 80];
     ex_s = ["RF09","C6"];
     ifdirs = false;
     
@@ -147,8 +147,8 @@ elseif strcmp(plane,'C130-VOCALS-REx')
     
 elseif strcmp(plane,'TO-POST')
     
-    sfc_fit_range = [4 40];
-    psd_fit_range = [8 80];
+%     sfc_fit_range = [4 20];
+%     psd_fit_range = [8 40];
     ex_s = ["RF12","CB01"];
     ifdirs = true;
     
@@ -254,6 +254,7 @@ fprintf('\n')
 %% PLOTS
 
 plot_all
+% plot_for_inspection
 
 
 

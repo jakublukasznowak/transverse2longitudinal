@@ -16,7 +16,7 @@ ynew = accumarray(bin_ind(:),y(:),[],@mean);
 emptyBins = ~ismember((1:Nbin)',bin_ind);
 Neb = sum(emptyBins);
 if Neb > 0
-    fprintf('Warning in LOGMEAN: %d averaging bins are empty.',Neb)
+    warning('LOGMEAN:EmptyBins','%d bins are empty.',Neb)
     xnew = xnew(~emptyBins);
     ynew = ynew(~emptyBins);
 end

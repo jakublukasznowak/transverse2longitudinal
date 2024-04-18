@@ -28,13 +28,27 @@ function [O,slp,e,fig] = fit_sfc (x,dr,fit_range,options)
 arguments
     x (:,1) {mustBeReal, mustBeFinite, mustBeNonempty}
     dr (1,1) {mustBePositive, mustBeFinite, mustBeNonempty} % = TAS/samp
-    fit_range (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(fit_range,x,dr)}
+    fit_range (1,2) {mustBePositive, mustBeFinite, mustBeNonempty}
     options.Method (1,1) string {mustBeMember(options.Method,{'direct','logmean'})} = 'logmean'
-    options.FitPoints (1,1) {mustBeInteger, mustBePositive, mustBeFinite, mustBeNonempty} = 10
+    options.FitPoints (1,1) {mustBeInteger, mustBeFinite, mustBeNonempty, mustBeGreaterThan(options.FitPoints,1)} = 10
     options.Slope (1,1) {mustBeReal, mustBeFinite, mustBeNonempty} = 2/3
     options.Plot (1,1) logical = false
-    options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty, mustBeValidRange(options.PlotXLim,x,dr)} = fit_range
+    options.PlotXLim (1,2) {mustBePositive, mustBeFinite, mustBeNonempty} = fit_range
     options.PlotYLim (1,2) {mustBeReal, mustBeNonempty} = [-inf inf];
+end
+
+
+Lx = length(x);
+
+% Check if the fit range is valid
+
+if fit_range(1)<dr || fit_range(2)>Lx*dr
+    if fit_range(1)<dr
+        fit_range(1) = dr;
+    else
+        fit_range(2) = Lx*dr;
+    end
+    warning('FIT_SFC:InvalidFitRange','Invalid fit range was changed to [%.2f %.2f].',fit_range(1),fit_range(2))
 end
 
 
@@ -43,7 +57,10 @@ end
 iv = ( ceil(fit_range(1)/dr) : fit_range(2)/dr )';
 rv = iv*dr;
 Li = length(iv);
-Lx = length(x);
+
+if Li<2
+    throw(MException('FIT_SFC:TooFewFitPoints','Number of fit points must be at least 2.'))
+end
 
 
 % Calculate structure function values for the displacements from the list
@@ -58,16 +75,10 @@ end
 
 if strcmp(options.Method,'logmean')
     [rv_fit,sfc_fit] = logmean(rv,sfc,options.FitPoints);
+    e.N = length(sfc_fit);
 else
     rv_fit = rv;
     sfc_fit = sfc;
-end
-Li_fit = length(rv_fit);
-
-if Li_fit<options.FitPoints
-    if ~strcmp(options.Method,'direct')
-        fprintf('Warning in EDR_SFC: Number of fitting points was reduced to %d.\n',Li_fit)
-    end
 end
 
 
@@ -139,23 +150,4 @@ else
 end
 
 
-end
-
-
-function mustBeValidRange(a,x,dr)
-    if ~ge(a(1),dr)
-        eid = 'Range:firstTooLow';
-        msg = sprintf('Fitting range must be within [dr dr*length(x)] = [%.2f %.2f].',dr,dr*length(x));
-        throwAsCaller(MException(eid,msg))
-    end
-    if ~le(a(2),length(x)*dr)
-        eid = 'Range:lastTooHigh';
-        msg = sprintf('Fitting range must be within [dr dr*length(x)] = [%.2f %.2f].',dr,dr*length(x));
-        throwAsCaller(MException(eid,msg))
-    end
-    if ge(a(1),a(2))
-        eid = 'Range:notIncreasing';
-        msg = 'Fitting range must be of nonzero length.';
-        throwAsCaller(MException(eid,msg))
-    end
 end

@@ -27,7 +27,7 @@ info = cell(Nf,1);
 
 for i_f = 1:Nf
     
-    fprintf('Load %s\n',d(i_f).name)
+%     fprintf('Load %s\n',d(i_f).name)
     datafile = [d(i_f).folder,filesep,d(i_f).name];
 
     [DATA{i_f},info{i_f}] = load_nc(datafile,vars,varsnew);

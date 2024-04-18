@@ -2,8 +2,8 @@
 function [TURB,MOM,levels,turb_info] = load_post_all(datapath)
 
 % List of levels
-levels  = {'cloud-top','cloud-base','sub-cloud'};%,'near-surface'};
-tags = {'CT','CB','SC'};
+levels  = {'cloud-top','cloud-base','sub-cloud','near-surface'};
+tags = {'CT','CB','SC','S'};
 
 % List of variables from turbulence dataset
 turb_vars = {'time','Time';
