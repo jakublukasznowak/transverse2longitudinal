@@ -38,7 +38,7 @@ The relavant datasets can be downloaded from the public repositories:
 
 The code was developed in MATLAB R2019b. The functionality in other versions of this environment was not tested.
 
-The script `main.m` performs the analysis described throughout the manuscript. The script `sensitivity.m` performs an additional sensitivity study on the choice of the fitting range described in the appendix.
+The script `main.m` performs the analysis described in the main part of the manuscript. The script `sensitivity.m` performs an additional sensitivity study on the choice of the fitting range described in the appendix.
 
 Two external packages are used:
 - [YAML 1.1 parser and emitter for MATLAB](https://www.mathworks.com/matlabcentral/fileexchange/106765-yaml) by Martin Koch

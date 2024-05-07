@@ -40,8 +40,8 @@ warning('off','backtrace')
 
 
 addpath(genpath(myprojectpath))
-plotpath_base = [myprojectpath,filesep,'figures',filesep,'sensitivity'];
-if ~isfolder(plotpath_base), mkdir(plotpath_base), end
+plotpath = [myprojectpath,filesep,'figures',filesep,'sensitivity'];
+if ~isfolder(plotpath), mkdir(plotpath), end
 
 
 
@@ -205,12 +205,13 @@ end
 
 %% Save/load
 
-save('sensitivity.mat','MOM_matrix','planes',...
-    'psd_upp_factors','sfc_upp_factors','psd_bot_factors','sfc_bot_factors',...
-    'plotpath_base')
+save([myprojectpath,filesep,'sensitivity.mat'],'plotpath','planes',...
+    'sfc_min_fit_points','psd_min_fit_points',...
+    'sfc_bot_factors','psd_bot_factors',...
+    'sfc_upp_factors','psd_upp_factors','MOM_matrix')
 
 % addpath(genpath(myprojectpath))
-% load('sensitivity.mat')
+% load([myprojectpath,filesep,'sensitivity.mat'])
 
 
 
@@ -239,8 +240,8 @@ for i_p = 1:Npl
     for i_f = 1:Nfc
         testname = sprintf('sfc %.1fL psd %.1fL',sfc_upp_factors(i_f),psd_upp_factors(i_f));
         
-        plotpath = [plotpath_base,filesep,replace(testname,{'.',' ',',','/'},{'p','_','',''})];
-        if ~isfolder(plotpath), mkdir(plotpath), end
+        plotpath_test = [plotpath,filesep,replace(testname,{'.',' ',',','/'},{'p','_','',''})];
+        if ~isfolder(plotpath_test), mkdir(plotpath_test), end
         
         MOM = MOM_matrix{i_p,i_f};
 
@@ -259,7 +260,7 @@ for i_p = 1:Npl
         xlabel(sprintf('$P_v/P_u$ in range [%.0f$\\Delta r$, %.1f$L$]',psd_bot_factors(i_p),psd_upp_factors(i_f)),'Interpreter','latex')
         ylabel(sprintf('$D_v/D_u$ in range [%.0f$\\Delta r$, %.1f$L$]',sfc_bot_factors(i_p),sfc_upp_factors(i_f)),'Interpreter','latex')
         title(plane)
-        print(fig,[plotpath,filesep,plane,'_ar_uv'],'-dpng','-r300')
+        print(fig,[plotpath_test,filesep,plane,'_ar_uv'],'-dpng','-r300')
 
         
         % (Pw/Pu,Dw/Du)
@@ -271,7 +272,7 @@ for i_p = 1:Npl
         xlabel(sprintf('$P_w/P_u$ in range [%.0f$\\Delta r$, %.1f$L$]',psd_bot_factors(i_p),psd_upp_factors(i_f)),'Interpreter','latex')
         ylabel(sprintf('$D_w/D_u$ in range [%.0f$\\Delta r$, %.1f$L$]',sfc_bot_factors(i_p),sfc_upp_factors(i_f)),'Interpreter','latex')
         title(plane)
-        print(fig,[plotpath,filesep,plane,'_ar_uw'],'-dpng','-r300')
+        print(fig,[plotpath_test,filesep,plane,'_ar_uw'],'-dpng','-r300')
 
         
         % (p,s)
@@ -284,7 +285,7 @@ for i_p = 1:Npl
         xlabel(sprintf('$p$ in range [%.0f$\\Delta r$, %.1f$L$]',psd_bot_factors(i_p),psd_upp_factors(i_f)),'Interpreter','latex')
         ylabel(sprintf('$s$ in range [%.0f$\\Delta r$, %.1f$L$]',sfc_bot_factors(i_p),sfc_upp_factors(i_f)),'Interpreter','latex')
         title(plane)
-        print(fig,[plotpath,filesep,plane,'_slp'],'-dpng','-r300')
+        print(fig,[plotpath_test,filesep,plane,'_slp'],'-dpng','-r300')
         
       
         clear MOM levels     
@@ -317,10 +318,10 @@ fprintf(' --outfile ./jam/scatter.pdf\n')
 sum_vars = {'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU',...
     'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
     'slp_psd_UX','slp_psd_VY','slp_psd_W',...
-    'R2_sfc_UX','R2_sfc_VY','R2_sfc_W',...
-    'R2_psd_UX','R2_psd_VY','R2_psd_W',...
     'R2_sfc_tot','R2_psd_tot','R2_tot_tot',...
     'N_sfc_UX','N_psd_UX'};
+
+grp_vars = {'testname','sfc_upp_factor','psd_upp_factor','plane'};
 
 
 % Propagate settings
@@ -346,27 +347,17 @@ for i_p = 1:Npl
         MOM_matrix{i_p,i_f}.R2_psd_tot = MOM_matrix{i_p,i_f}.R2_psd_UX .* MOM_matrix{i_p,i_f}.R2_psd_VY .* MOM_matrix{i_p,i_f}.R2_psd_W;
         MOM_matrix{i_p,i_f}.R2_tot_tot = MOM_matrix{i_p,i_f}.R2_sfc_tot .* MOM_matrix{i_p,i_f}.R2_psd_tot;
     end
-    
 end
 
 
 % Generate group summary table
 
-keep_vars = horzcat({'testname','sfc_upp_factor','psd_upp_factor',...
-    'plane','flight','name','level','alt'},sum_vars);
-
-temp =  cellfun(@(x) x(:,keep_vars),MOM_matrix(:),'UniformOutput',false);
+temp =  cellfun(@(x) x(:,horzcat(grp_vars,sum_vars)),MOM_matrix(:),'UniformOutput',false);
 MOM = vertcat(temp{:});
 
-MOM.rel_upp_factor(:) = "shifted";
-MOM.rel_upp_factor(MOM.sfc_upp_factor==MOM.psd_upp_factor) = "equal";
+SUM = groupsummary(MOM,grp_vars,{'mean'},sum_vars);
 
-
-CNT = groupcounts(MOM,{'testname','sfc_upp_factor','psd_upp_factor',...
-    'plane','N_sfc_UX'});
-
-SUM2 = groupsummary(MOM,{'rel_upp_factor','testname','sfc_upp_factor','plane'},...
-    {'mean'},sum_vars);
+CNT = groupcounts(MOM,horzcat(grp_vars,{'N_sfc_UX'}));
 
 
 
@@ -374,18 +365,11 @@ SUM2 = groupsummary(MOM,{'rel_upp_factor','testname','sfc_upp_factor','plane'},.
 
 % Ax limits
 ratio_lim = [0 1.6];
-p_lim = [0 2.5];
+p_lim = [0.4 2.5];
 s_lim = [0 1.3];
 
-rel_upp_factor = "shifted";
-SUM = SUM2(SUM2.rel_upp_factor==rel_upp_factor,:);
-
-% rel_upp_factor = "both";
-% SUM = SUM2;
-
-plotpath = [plotpath_base,filesep,char(rel_upp_factor),filesep];
-if ~isfolder(plotpath), mkdir(plotpath), end
-
+plotpath_sum = [plotpath,filesep,'summary'];
+if ~isfolder(plotpath_sum), mkdir(plotpath_sum), end
 
 mks = 10;
 
@@ -400,20 +384,23 @@ fig = plot_xy_uni(SUM,{'mean_ar_psd_VU'},{'mean_ar_sfc_VU'},...
     'XLim',ratio_lim,'YLim',ratio_lim);
 xlabel('$P_v/P_u$','Interpreter','latex')
 ylabel('$D_v/D_u$','Interpreter','latex')
-print(fig,[plotpath,'ar_vu'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'ar_vu'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_ar_psd_WU'},{'mean_ar_sfc_WU'},...
     'testname','plane',[],true,{'cross1','ver3/4','hor3/4','hor3/4','ver4/3','hor4/3'},mks,...
     'XLim',ratio_lim,'YLim',ratio_lim);
 xlabel('$P_w/P_u$','Interpreter','latex')
 ylabel('$D_w/D_u$','Interpreter','latex')
-print(fig,[plotpath,'ar_wu'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'ar_wu'],'-dpng','-r300')
+
+
+% Legend
 
 [fig,ax] = plot_xy_uni(SUM,{'mean_ar_psd_VU'},{'mean_ar_sfc_VU'},...
     'testname','plane',[],true,{'cross1','ver3/4','hor3/4','hor3/4','ver4/3','hor4/3'},mks);
 ax.Position = ax.Position + [-10 0 0 0];
 legend( horzcat(tests,planes),'Position',[0.5 0.5 0 0],'Interpreter','latex')
-print(fig,[plotpath,'legend'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'legend'],'-dpng','-r300')
 
 
 % Exponents
@@ -422,68 +409,41 @@ fig = plot_xy_uni(SUM,{'mean_slp_psd_UX'},{'mean_slp_sfc_UX'},...
     'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim);
 xlabel('$p_u$','Interpreter','latex')
 ylabel('$s_u$','Interpreter','latex')
-print(fig,[plotpath,'slp_u'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'slp_u'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_slp_psd_VY'},{'mean_slp_sfc_VY'},...
     'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim);
 xlabel('$p_v$','Interpreter','latex')
 ylabel('$s_v$','Interpreter','latex')
-print(fig,[plotpath,'slp_v'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'slp_v'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_slp_psd_W'},{'mean_slp_sfc_W'},...
     'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim);
 xlabel('$p_w$','Interpreter','latex')
 ylabel('$s_w$','Interpreter','latex')
-print(fig,[plotpath,'slp_w'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'slp_w'],'-dpng','-r300')
 
 
 % R2
-
-fig = plot_xy_uni(SUM,{'mean_R2_psd_UX'},{'mean_R2_sfc_UX'},...
-    'testname','plane',[],true,{'cross1'},mks);
-xlabel('$R_{Pu}^2$','Interpreter','latex')
-ylabel('$R_{Du}^2$','Interpreter','latex')
-print(fig,[plotpath,'R2_u'],'-dpng','-r300')
-
-fig = plot_xy_uni(SUM,{'mean_R2_psd_VY'},{'mean_R2_sfc_VY'},...
-    'testname','plane',[],true,{'cross1'},mks);
-xlabel('$R_{Pv}^2$','Interpreter','latex')
-ylabel('$R_{Dv}^2$','Interpreter','latex')
-print(fig,[plotpath,'R2_v'],'-dpng','-r300')
-
-fig = plot_xy_uni(SUM,{'mean_R2_psd_W'},{'mean_R2_sfc_W'},...
-    'testname','plane',[],true,{'cross1'},mks);
-xlabel('$R_{Pw}^2$','Interpreter','latex')
-ylabel('$R_{Dw}^2$','Interpreter','latex')
-print(fig,[plotpath,'R2_w'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_R2_psd_tot'},{'mean_R2_sfc_tot'},...
     'testname','plane',[],true,{'cross1'},mks);
 xlabel('$R_{Pu}^2R_{Pv}^2R_{Pw}^2$','Interpreter','latex')
 ylabel('$R_{Du}^2R_{Dv}^2R_{Dw}^2$','Interpreter','latex')
-print(fig,[plotpath,'R2_tot'],'-dpng','-r300')
-
+print(fig,[plotpath_sum,filesep,'R2_tot'],'-dpng','-r300')
 
 [fig,~,co] = fig16x12;
 for i_p = 1:Npl
     ind = SUM.plane==planes{i_p};
     plot(SUM.sfc_upp_factor(ind),SUM.mean_R2_tot_tot(ind),'-o','Color',co(i_p,:))
 end
-% for i_p = 1:Npl
-%     ind = SUM.plane==planes{i_p};
-%     plot(SUM.sfc_upp_factor(ind),SUM.mean_R2_sfc_tot(ind),'--','Color',co(i_p,:),'HandleVisibility','off')
-%     plot(SUM.sfc_upp_factor(ind),SUM.mean_R2_psd_tot(ind),':','Color',co(i_p,:),'HandleVisibility','off')
-% end
 legend(planes,'Location','best')
 xlabel('$F$ sfc','Interpreter','latex')
 ylabel('$R_{Du}^2R_{Dv}^2R_{Dw}^2R_{Pu}^2R_{Pv}^2R_{Pw}^2$','Interpreter','latex')
-print(fig,[plotpath,'R2_tot_tot'],'-dpng','-r300')
+print(fig,[plotpath_sum,filesep,'R2_tot_tot'],'-dpng','-r300')
 
 
 % Rejected segments
-
-sfc_min_fit_points = 3;
-psd_min_fit_points = 3;
 
 CNTrej = CNT;
 CNTrej.GroupCount(CNTrej.N_sfc_UX>=sfc_min_fit_points) = 0;
@@ -497,6 +457,4 @@ end
 legend(planes,'Location','best')
 xlabel('$F$ sfc','Interpreter','latex')
 ylabel('# rejected segments')
-print(fig,[plotpath,'rej_tot'],'-dpng','-r300')
-
-
+print(fig,[plotpath_sum,filesep,'rej_tot'],'-dpng','-r300')

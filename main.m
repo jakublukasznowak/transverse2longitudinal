@@ -294,6 +294,7 @@ for i_p = 1:Npl
     
     clear MOM TURB
     
+    fprintf('\n')
 end
 
 
@@ -308,17 +309,17 @@ for i_p = 1:Npl
     
     MOM = MOM_vec{i_p};
     
-    print_table_of_levels(MOM,{'alt','int_scale','length_km'},true,0)
+    print_table(MOM,{'alt','int_scale','length_km'},true,0)
 
-    print_table_of_levels(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
+    print_table(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
     
-    print_table_of_levels(MOM,{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
-                               'slp_psd_UX','slp_psd_VY','slp_psd_W'})
+    print_table(MOM,{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
+                     'slp_psd_UX','slp_psd_VY','slp_psd_W'})
     
-    CNT = MOM(MOM.N_sfc_UX<sfc_min_fit_points,:);
-    if ~isempty(CNT)
-        print_table_of_levels(CNT,[],true,0)
-    end
+%     CNT = MOM(MOM.N_sfc_UX<sfc_min_fit_points,:);
+%     if ~isempty(CNT)
+%         print_table(CNT,[],true,0)
+%     end
     
     fprintf('\n')
 end
