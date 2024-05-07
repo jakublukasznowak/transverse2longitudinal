@@ -5,7 +5,7 @@
 planes = {'ATR-EUREC4A','C130-RICO','C130-VOCALS-REx','TO-POST'};
 
 
-% Fitting: range bottom limit (= factor*dr)
+% Fit range: bottom limit (= factor*dr)
 sfc_bot_factors = [2 2 2 3]; % list of factors for each plane/experiment
 psd_bot_factors = [4 4 4 6];
 
@@ -59,7 +59,7 @@ for i_p = 1:Npl
     fprintf('%s\n',plane)
     
     
-    % Load dataset
+    % Load datasets
     
     datapath = [mydatapath,filesep,plane];
     
@@ -72,7 +72,6 @@ for i_p = 1:Npl
     elseif strcmp(plane,'TO-POST')
         [TURB,MOM] = load_post_all(datapath);
     end
-    
     
     Nseg = size(MOM,1);
     fprintf('Number of segments: %d\n',Nseg)
@@ -89,25 +88,27 @@ for i_p = 1:Npl
     end
     
     
-    % Iteration
+    % Iterations
     
     for i_f = 1:Nfc
         testname = sprintf('sfc %.1fL psd %.1fL',sfc_upp_factors(i_f),psd_upp_factors(i_f));
         fprintf('%s',testname)
+        
+        
+        % Structure functions
+        
+        fprintf('%s','SFC ... ')
 
         MOM.sfc_fit_range = [MOM.dr*sfc_bot_factors(i_p) MOM.int_scale*sfc_upp_factors(i_f)];
-        MOM.psd_fit_range = [MOM.dr*psd_bot_factors(i_p) MOM.int_scale*psd_upp_factors(i_f)];
         
         for i_v = 1:Nvar
-            var = vars{i_v}; fprintf(' %s',var)
+            var = vars{i_v}; fprintf('%3s',var)
             
             MOM{:,["off","slp","e_off","e_slp","R2","N"]+"_sfc_"+var} = nan;
-            MOM{:,["off","slp","e_off","e_slp","R2","N"]+"_psd_"+var} = nan;
             
             for i_s = 1:Nseg
                 dr = MOM.dr(i_s);
                 
-                % Structure functions
                 try
                     [MOM.(['off_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = ...
                         fit_sfc( detrend(TURB(i_s).(var)), dr, MOM.sfc_fit_range(i_s,:), ...
@@ -127,8 +128,25 @@ for i_p = 1:Npl
                 if MOM{i_s,"N_sfc_"+var} < sfc_min_fit_points
                     MOM{i_s,["off","slp","e_off","e_slp","R2"]+"_sfc_"+var} = nan;
                 end
-                
-                % Power spectra
+            end
+            
+        end
+        
+        
+        % Power spectra
+        
+        fprintf('%s','PSD ... ')
+        
+        MOM.psd_fit_range = [MOM.dr*psd_bot_factors(i_p) MOM.int_scale*psd_upp_factors(i_f)];
+        
+        for i_v = 1:Nvar
+            var = vars{i_v}; fprintf('%3s',var)
+            
+            MOM{:,["off","slp","e_off","e_slp","R2","N"]+"_psd_"+var} = nan;
+            
+            for i_s = 1:Nseg
+                dr = MOM.dr(i_s);
+
                 try
                     [MOM.(['off_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),es] = ...
                         fit_psd( detrend(TURB(i_s).(var)), dr, MOM.psd_fit_range(i_s,:), ...
@@ -148,15 +166,12 @@ for i_p = 1:Npl
                 
                 if MOM{i_s,"N_psd_"+var} < psd_min_fit_points
                     MOM{i_s,["off","slp","e_off","e_slp","R2"]+"_psd_"+var} = nan;
-                end
-                    
+                end     
             end
  
             MOM{:,["slp","R2"]+"_psd_"+var} = -MOM{:,["slp","R2"]+"_psd_"+var};
             
         end
-        
-        fprintf('\n')
         
         
         % Transverse-to-longitudinal ratios
@@ -178,6 +193,7 @@ for i_p = 1:Npl
         
         MOM_matrix{i_p,i_f} = MOM;
         
+        fprintf('\n')
     end
     
     clear MOM TURB
@@ -189,17 +205,18 @@ end
 
 %% Save/load
 
-% save('sensitivity_ls.mat','MOM_matrix','planes',...
-%     'psd_upp_factors','sfc_upp_factors','psd_bot_factors','sfc_bot_factors',...
-%     'plotpath_base')
+save('sensitivity.mat','MOM_matrix','planes',...
+    'psd_upp_factors','sfc_upp_factors','psd_bot_factors','sfc_bot_factors',...
+    'plotpath_base')
 
-addpath(genpath(myprojectpath))
-load('sensitivity_ls.mat')
+% addpath(genpath(myprojectpath))
+% load('sensitivity.mat')
 
 
 
 %% Plot individual results
 
+% Ax limits
 ratio_lim = [0 2];
 p_lim = [0 2.5];
 s_lim = [0 1.5];
@@ -278,7 +295,7 @@ for i_p = 1:Npl
 end
 
 
-% Printout jam script
+% Printout a piece of a jam script
 
 jamplots = {'ar_uv','ar_uw','slp'};
 for i_j = 1:numel(jamplots)
@@ -355,6 +372,7 @@ SUM2 = groupsummary(MOM,{'rel_upp_factor','testname','sfc_upp_factor','plane'},.
 
 %% Summary plots
 
+% Ax limits
 ratio_lim = [0 1.6];
 p_lim = [0 2.5];
 s_lim = [0 1.3];

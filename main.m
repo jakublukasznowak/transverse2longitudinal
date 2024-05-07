@@ -173,7 +173,6 @@ for i_p = 1:Npl
         [TURB,MOM] = load_post_all(datapath);
     end
     
-
     Nseg = size(MOM,1);
     fprintf('Number of segments: %d\n',Nseg)
     
