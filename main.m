@@ -1,17 +1,7 @@
 
 %% Introduction
 
-% This code was written by Jakub L. Nowak for the analysis of the
-% transverse-to-longitudinal ratios of 2nd order turbulent velocity
-% statistics (structure functions and power spectra) derived from aircraft
-% measurements. There are 4 field experiments and 3 aircrafts sampling 2 marine
-% boundary layer regimes included:
-% - EUREC4A - ATR42 aircraft - shallow trade-wind convection
-% - RICO - C130 aircraft - shallow trade-wind convection
-% - VOCALS-REx - C130 aircraft - subtropical stratocumulus
-% - POST - Twin Otter aircraft - subtropical stratocumulus
-%
-% The analysis requires access to the datasets which can be downloaded from
+% The code requires access to the datasets which can be downloaded from
 % the public data repositories.
 %
 % MYPROJECTPATH is the location where you downloaded the codes
@@ -81,7 +71,7 @@
 planes = {'ATR-EUREC4A','C130-RICO','C130-VOCALS-REx','TO-POST'};
 
 
-% Fit range bottom limit (= factor*dr)
+% Fit range: bottom limit (= factor*dr)
 sfc_bot_factors = [2 2 2 3]; % list of factors for each plane/experiment
 psd_bot_factors = [4 4 4 6];
 
@@ -116,8 +106,7 @@ warning('off','backtrace')
 
 
 % Example segments to plot sfc/psd
-% examples = {["RF12","R2B"],["RF06","SC01"],["RF09","C6"],["RF12","CB01"]}; % [flight, name] for each plane/experiment
-examples = {};
+examples = {["RF12","R2B"],["RF06","SC01"],["RF09","C6"],["RF12","CB01"]}; % [flight, name] for each plane/experiment
 
 
 addpath(genpath(myprojectpath))
@@ -140,7 +129,7 @@ for i_p = 1:Npl
     fprintf('%s\n',plane)
     
     
-    % Load dataset
+    % Load datasets
     
     datapath = [mydatapath,filesep,plane];
     
@@ -180,7 +169,7 @@ for i_p = 1:Npl
         % Cut segments out of turbulence data
         % Rotate eastward/northward WX, WY to longitudinal/lateral UX, VY
         % Compute mean values
-        % Classify segments into levels and select: cloud-top,cloud-base, sub-cloud
+        % Classify segments into levels and select: cloud-top, cloud-base, sub-cloud, near-surface
         [TURB,MOM] = load_post_all(datapath);
     end
     
@@ -320,7 +309,6 @@ for i_p = 1:Npl
     
     MOM = MOM_vec{i_p};
     
-    
     print_table_of_levels(MOM,{'alt','int_scale','length_km'},true,0)
 
     print_table_of_levels(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
@@ -350,20 +338,19 @@ for i_p = 1:Npl
     plane = planes{i_p};
     fprintf('%s\n',plane)
     
+    if ~isfolder([plotpath_ex,filesep,plane]), mkdir([plotpath_ex,filesep,plane]), end
+    
     MOM = MOM_vec{i_p};
     TURB = TURB_vec{i_p};
     
-    plotpath_plane = [plotpath_ex,filesep,plane];
-    if ~isfolder(plotpath_plane), mkdir(plotpath_plane), end
-    
     if ~isempty(examples)
         ind_s = find( MOM.flight==examples{i_p}(1) & MOM.name==examples{i_p}(2) );
-        plotpath_plane = [plotpath_plane,'_'];
+        plotpath_plane = [plotpath_ex,filesep,plane,'_'];
         ylim_sfc = [1e-2 0.3];
         ylim_psd = [1e-4 1];
     else % if there is no example list, plot all segments
         ind_s = 1:Nseg;
-        plotpath_plane = [plotpath_plane,filesep];
+        plotpath_plane = [plotpath_ex,filesep,plane,filesep];
         ylim_sfc = [-inf inf];
         ylim_psd = [-inf inf];
     end
@@ -414,11 +401,12 @@ end
 
 %% Plot results
 
- disp('Plot results ...')
+disp('Plot results ...')
 
-plotpath_main = [plotpath,filesep,'main'];
-if ~isfolder(plotpath_main), mkdir(plotpath_main), end
+plotpath_res = [plotpath,filesep,'main'];
+if ~isfolder(plotpath_res), mkdir(plotpath_res), end
 
+% Ax limits
 ratio_lim = [0 1.6];
 p_lim = [0.4 2.5];
 s_lim = [0 1.3];
@@ -451,7 +439,7 @@ for i_p = 1:Npl
     xlabel('$P_v/P_u$','Interpreter','latex')
     ylabel('$D_v/D_u$','Interpreter','latex')
     title(plane)
-    print(fig,[plotpath_main,filesep,plane,'_ar_uv'],'-dpng','-r300')
+    print(fig,[plotpath_res,filesep,plane,'_ar_uv'],'-dpng','-r300')
     
     
     % (Pw/Pu,Dw/Du)
@@ -463,7 +451,7 @@ for i_p = 1:Npl
     xlabel('$P_w/P_u$','Interpreter','latex')
     ylabel('$D_w/D_u$','Interpreter','latex')
     title(plane)
-    print(fig,[plotpath_main,filesep,plane,'_ar_uw'],'-dpng','-r300')
+    print(fig,[plotpath_res,filesep,plane,'_ar_uw'],'-dpng','-r300')
     
     
     % (p,s)
@@ -476,7 +464,7 @@ for i_p = 1:Npl
     xlabel('$p$','Interpreter','latex')
     ylabel('$s$','Interpreter','latex')
     title(plane)
-    print(fig,[plotpath_main,filesep,plane,'_slp'],'-dpng','-r300')
+    print(fig,[plotpath_res,filesep,plane,'_slp'],'-dpng','-r300')
     
 end
 
@@ -484,6 +472,7 @@ end
 
 %% Plot uncertainties in box-whisker
 
+% Ax limits
 e_ratio_lim = [0 0.3];
 e_s_lim = [0 0.1];
 e_p_lim = [0 0.3];
@@ -507,7 +496,7 @@ for i_p = 1:Npl
     h.axis.YLim = e_ratio_lim;
     ylabel('Uncertainty','Interpreter','latex')
     title(plane)
-    print(h.figure,[plotpath_main,filesep,plane,'_e_wsk_ar'],'-dpng','-r300')
+    print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_ar'],'-dpng','-r300')
     
     h = plot_whisker(MOM,{'e_slp_sfc_UX','e_slp_sfc_VY','e_slp_sfc_W'},...
         levels,0,'PrimaryLabels',{'$s_u$','$s_v$','$s_w$'},'DataLim',e_s_lim);
@@ -515,7 +504,7 @@ for i_p = 1:Npl
     h.axis.YLim = e_s_lim;
     ylabel('Uncertainty','Interpreter','latex')
     title(plane)
-    print(h.figure,[plotpath_main,filesep,plane,'_e_wsk_slp_sfc'],'-dpng','-r300')
+    print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_slp_sfc'],'-dpng','-r300')
     
     h = plot_whisker(MOM,{'e_slp_psd_UX','e_slp_psd_VY','e_slp_psd_W'},...
         levels,0,'PrimaryLabels',{'$p_u$','$p_v$','$p_w$'},'DataLim',e_p_lim);
@@ -523,6 +512,6 @@ for i_p = 1:Npl
     h.axis.YLim = e_p_lim;
     ylabel('Uncertainty','Interpreter','latex')
     title(plane)
-    print(h.figure,[plotpath_main,filesep,plane,'_e_wsk_slp_psd'],'-dpng','-r300')
+    print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_slp_psd'],'-dpng','-r300')
 
 end
