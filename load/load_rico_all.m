@@ -68,9 +68,13 @@ for i_f = 1:numel(flights)
 end
 
 % Exclude segments
-exc_seg = ["RF11","S02";    % spikes
-           "RF16","SC09";   % strange maneuvers
-           "RF03","SC03"];  % strange maneuvers
+exc_seg = ["RF11","S02";  % spikes
+           "RF16","CB02"; % TAS variations
+           "RF12","CL03"; % irregular changes in heading
+           "RF06","CB03"; % irregular changes in heading
+           "RF14","CL08"; % turn in the middle of the segment      
+           ]; 
+           
 for i_e = 1:size(exc_seg,1)
     ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
     MOM(ind_s,:) = [];

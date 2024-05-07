@@ -44,7 +44,7 @@ MOM.cloud_base = SEG.cloud_base;
 MOM.LCL = SEG.LCL;
 
 % Exclude segments
-exc_seg = ["RF04","C4"]; % strange maneuvers
+exc_seg = ["RF12","C5"]; % drifting TAS
 for i_e = 1:size(exc_seg,1)
     ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
     MOM(ind_s,:) = [];

@@ -87,9 +87,9 @@ for i_f = 1:numel(flights)
 end
 
 % Exclude segments
-exc_seg = ["RF05","CT03";  % periodic signal oscillations
-           "RF07","CT03";  % noise
-           "RF04","CT02"]; % noise
+exc_seg = ["RF05","CT03";  % periodic oscillations in UX, drift in TAS and ALT
+           "RF07","CT03";  % noise in velocities (maybe FT)
+           "RF04","CT02"]; % noise in velocities (maybe FT)
 for i_e = 1:size(exc_seg,1)
     ind_s = find(MOM.flight==exc_seg(i_e,1) & MOM.name==exc_seg(i_e,2));
     MOM(ind_s,:) = [];
