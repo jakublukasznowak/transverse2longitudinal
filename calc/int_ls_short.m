@@ -5,12 +5,19 @@
 %
 % Optional Name-Value arguments:
 % 'Method':
-%       'e-decay'     -  (default) LS is the crossing of exp(-1) level
-%       'zero'        -  LS is the first zero crossing
-%       'integrate'   -  LS is the integral of correlation function up to
-%                        the first zero crossing
+%       'e-decay'      -  (default) LS is the crossing of exp(-1) level
+%       'zero'         -  LS is the crossing of the first zero
+%       'integrate'    -  LS is the integral of correlation function up to
+%                         the first zero crossing
+%       'cum-integrate' - LS is the maximum of cumulative integral of the
+%                         correlation function
+% 'MaxLag': maximum lag to consider [in points]
+% 'MaxLagFactor': max lag definition as factor x exp(-1) crossing for
+%   integration methods
+% 'dr': displacement between sample points [in meters]
 % 'SubstractMean': whether to substract mean from X and Y before
-% calculating correlation function (true/false)
+%   calculating correlation function (true/false)
+% 'Plot': selects whether to show a diagnostic plot (true/false)
 
 
 function [LS,fig] = int_ls_short (x,y,options)
@@ -73,8 +80,14 @@ end
 % Interpolate to get precise limit crossing position
 
 if rho2>lim
-    disp('No crossing! Took the largest lag instead.')
     LC = options.MaxLag;
+    
+    if ismember(options.Method,{'e-decay','zero'})
+        warning('INT_LS_SHORT:NoCrossing','\nNo %.1f crossing. Take max lag %.1f.',lim,LC)
+    elseif strcmp(options.Method,'integrate')
+        warning('INT_LS_SHORT:NoCrossing','\nNo %.1f crossing. Integrating to max lag %.1f.',lim,LC)
+    end
+    
 else
     LC = interp1( [rho1,rho2], [lag1,lag2], lim );
 end
