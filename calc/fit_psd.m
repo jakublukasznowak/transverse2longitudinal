@@ -94,8 +94,8 @@ end
 
 if strcmp(options.Method,'logmean')
     [wv_fit,psd_fit] = logmean(wv_fit,psd_fit,options.FitPoints);
-    e.N = length(psd_fit);
 end
+e.N = length(psd_fit);
 
 
 % Fit (1): fixed slope

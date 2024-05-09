@@ -75,11 +75,11 @@ end
 
 if strcmp(options.Method,'logmean')
     [rv_fit,sfc_fit] = logmean(rv,sfc,options.FitPoints);
-    e.N = length(sfc_fit);
 else
     rv_fit = rv;
     sfc_fit = sfc;
 end
+e.N = length(sfc_fit);
 
 
 % Fit (1): fixed slope

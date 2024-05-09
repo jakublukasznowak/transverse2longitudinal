@@ -1,9 +1,9 @@
 
+function mask_new = extend_mask (mask,n,method)
+
 % Extend each event marked by TRUE values in a logical MASK by its N width
 % in front of and behind this event.
 
-
-function mask_new = extend_mask (mask,n,method)
 
 L = length(mask);
 

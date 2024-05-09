@@ -1,9 +1,8 @@
 
+function [xnew,ynew] = logmean (x,y,Nbin)
+
 % LOGMEAN averages the values from two input vectors X and Y in NBIN bins
 % which are log-equally distributed across the range of X values.
-
-
-function [xnew,ynew] = logmean (x,y,Nbin)
 
 bin_edge = exp( linspace(log(min(x)),log(max(x)),Nbin+1)' );
 bin_edge(1) = min(x);
