@@ -323,7 +323,42 @@ for i_p = 1:Npl
     
     fprintf('\n')
 end
-    
+
+%%
+
+% vars = {'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU',...
+%         'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
+%         'slp_psd_UX','slp_psd_VY','slp_psd_W'};
+% 
+% for i_p = 1:Npl
+%     plane = planes{i_p};
+%     
+%     if ismember(plane,{'ATR-EUREC4A','TO-POST'})
+%         fprintf('%s\n',plane)
+%         
+%         MOM = MOM_vec{i_p};
+%         
+%         DIRSUM = groupsummary(MOM,{'level','dir2'},{'std'},vars);
+%         for i_v = 1:numel(vars)
+%             var = vars{i_v};
+%             DIRSUM{:,['std_',var]} = DIRSUM{:,['std_',var]}./sqrt(DIRSUM.GroupCount);
+%         end
+%         DIRSUM
+%         
+%         levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),'mean_alt','descend').level';
+%         for i_l = 1:numel(levels)
+%             DIRSUM.level_id(DIRSUM.level==levels(i_l)) = i_l;
+%         end
+%         
+%         [fig,ax] = plot_xy_uni(DIRSUM,{'std_ar_psd_VU'},{'std_ar_sfc_VU'},'level_id','','dir2',true,{'cross1'},10);
+%         legend(levels,'Location','northwest','Interpreter','latex')
+%         xlabel('$P_v/P_u$','Interpreter','latex')
+%         ylabel('$D_v/D_u$','Interpreter','latex')
+%         title(plane)
+% %         print(fig,[plotpath_res,filesep,plane,'_ar_uv'],'-dpng','-r300')
+%     end
+% end
+
 
 
 %% Plot examples
