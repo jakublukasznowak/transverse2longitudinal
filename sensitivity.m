@@ -205,13 +205,13 @@ end
 
 %% Save/load
 
-save([myprojectpath,filesep,'sensitivity.mat'],'plotpath','planes',...
-    'sfc_min_fit_points','psd_min_fit_points',...
-    'sfc_bot_factors','psd_bot_factors',...
-    'sfc_upp_factors','psd_upp_factors','MOM_matrix')
+% save([myprojectpath,filesep,'sensitivity.mat'],'plotpath','planes',...
+%     'sfc_min_fit_points','psd_min_fit_points',...
+%     'sfc_bot_factors','psd_bot_factors',...
+%     'sfc_upp_factors','psd_upp_factors','MOM_matrix')
 
-% addpath(genpath(myprojectpath))
-% load([myprojectpath,filesep,'sensitivity.mat'])
+addpath(genpath(myprojectpath))
+load([myprojectpath,filesep,'sensitivity.mat'])
 
 
 
@@ -363,9 +363,13 @@ CNT = groupcounts(MOM,horzcat(grp_vars,{'N_sfc_UX'}));
 %% Summary plots
 
 % Ax limits
-ratio_lim = [0 1.6];
-p_lim = [0.4 2.5];
-s_lim = [0 1.3];
+% ratio_lim = [0 1.6];
+% p_lim = [0.4 2.5];
+% s_lim = [0 1.3];
+ratio_lim = [0.6 1.4];
+p_lim = [1.0 2.2];
+s_lim = [0.3 1.1];
+font = 16;
 
 plotpath_sum = [plotpath,filesep,'summary'];
 if ~isfolder(plotpath_sum), mkdir(plotpath_sum), end
@@ -379,15 +383,15 @@ planes = unique(SUM.plane)';
 % Ratios
 
 fig = plot_xy_uni(SUM,{'mean_ar_psd_VU'},{'mean_ar_sfc_VU'},...
-    'testname','plane',[],true,{'cross1','ver3/4','hor3/4','ver4/3','hor4/3'},mks,...
-    'XLim',ratio_lim,'YLim',ratio_lim);
+    'testname','plane',[],true,{'cross1','ver4/3','hor4/3'},mks,...
+    'XLim',ratio_lim,'YLim',ratio_lim,'FontSize',font);
 xlabel('$P_v/P_u$','Interpreter','latex')
 ylabel('$D_v/D_u$','Interpreter','latex')
 print(fig,[plotpath_sum,filesep,'ar_vu'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_ar_psd_WU'},{'mean_ar_sfc_WU'},...
-    'testname','plane',[],true,{'cross1','ver3/4','hor3/4','hor3/4','ver4/3','hor4/3'},mks,...
-    'XLim',ratio_lim,'YLim',ratio_lim);
+    'testname','plane',[],true,{'cross1','ver4/3','hor4/3'},mks,...
+    'XLim',ratio_lim,'YLim',ratio_lim,'FontSize',font);
 xlabel('$P_w/P_u$','Interpreter','latex')
 ylabel('$D_w/D_u$','Interpreter','latex')
 print(fig,[plotpath_sum,filesep,'ar_wu'],'-dpng','-r300')
@@ -396,7 +400,7 @@ print(fig,[plotpath_sum,filesep,'ar_wu'],'-dpng','-r300')
 % Legend
 
 [fig,ax] = plot_xy_uni(SUM,{'mean_ar_psd_VU'},{'mean_ar_sfc_VU'},...
-    'testname','plane',[],true,{'cross1','ver3/4','hor3/4','hor3/4','ver4/3','hor4/3'},mks);
+    'testname','plane',[],true,{'cross1','ver3/4','hor3/4','hor3/4','ver4/3','hor4/3'},mks,'FontSize',font);
 ax.Position = ax.Position + [-10 0 0 0];
 legend( horzcat(tests,planes),'Position',[0.5 0.5 0 0],'Interpreter','latex')
 print(fig,[plotpath_sum,filesep,'legend'],'-dpng','-r300')
@@ -405,19 +409,19 @@ print(fig,[plotpath_sum,filesep,'legend'],'-dpng','-r300')
 % Exponents
 
 fig = plot_xy_uni(SUM,{'mean_slp_psd_UX'},{'mean_slp_sfc_UX'},...
-    'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim);
+    'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim,'FontSize',font);
 xlabel('$p_u$','Interpreter','latex')
 ylabel('$s_u$','Interpreter','latex')
 print(fig,[plotpath_sum,filesep,'slp_u'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_slp_psd_VY'},{'mean_slp_sfc_VY'},...
-    'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim);
+    'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim,'FontSize',font);
 xlabel('$p_v$','Interpreter','latex')
 ylabel('$s_v$','Interpreter','latex')
 print(fig,[plotpath_sum,filesep,'slp_v'],'-dpng','-r300')
 
 fig = plot_xy_uni(SUM,{'mean_slp_psd_W'},{'mean_slp_sfc_W'},...
-    'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim);
+    'testname','plane',[],false,{'ver5/3','hor2/3'},mks,'XLim',p_lim,'YLim',s_lim,'FontSize',font);
 xlabel('$p_w$','Interpreter','latex')
 ylabel('$s_w$','Interpreter','latex')
 print(fig,[plotpath_sum,filesep,'slp_w'],'-dpng','-r300')

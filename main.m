@@ -1,5 +1,5 @@
 
-%% Introduction test
+%% Introduction
 
 % The code requires access to the datasets which can be downloaded from
 % the public data repositories.
@@ -311,7 +311,7 @@ for i_p = 1:Npl
     
     print_table(MOM,{'alt','int_scale','length_km'},true,0)
 
-    print_table(MOM,{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
+    print_table(MOM,{'level'},{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
     
     print_table(MOM,{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
                      'slp_psd_UX','slp_psd_VY','slp_psd_W'})
@@ -324,40 +324,34 @@ for i_p = 1:Npl
     fprintf('\n')
 end
 
-%%
 
-% vars = {'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU',...
-%         'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
-%         'slp_psd_UX','slp_psd_VY','slp_psd_W'};
-% 
-% for i_p = 1:Npl
-%     plane = planes{i_p};
-%     
-%     if ismember(plane,{'ATR-EUREC4A','TO-POST'})
-%         fprintf('%s\n',plane)
-%         
-%         MOM = MOM_vec{i_p};
-%         
-%         DIRSUM = groupsummary(MOM,{'level','dir2'},{'std'},vars);
-%         for i_v = 1:numel(vars)
-%             var = vars{i_v};
-%             DIRSUM{:,['std_',var]} = DIRSUM{:,['std_',var]}./sqrt(DIRSUM.GroupCount);
-%         end
-%         DIRSUM
-%         
-%         levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),'mean_alt','descend').level';
-%         for i_l = 1:numel(levels)
-%             DIRSUM.level_id(DIRSUM.level==levels(i_l)) = i_l;
-%         end
-%         
-%         [fig,ax] = plot_xy_uni(DIRSUM,{'std_ar_psd_VU'},{'std_ar_sfc_VU'},'level_id','','dir2',true,{'cross1'},10);
-%         legend(levels,'Location','northwest','Interpreter','latex')
-%         xlabel('$P_v/P_u$','Interpreter','latex')
-%         ylabel('$D_v/D_u$','Interpreter','latex')
-%         title(plane)
-% %         print(fig,[plotpath_res,filesep,plane,'_ar_uv'],'-dpng','-r300')
-%     end
-% end
+
+%% Quantify scatter of the results ['statistical robustness']
+
+vars = {'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU',...
+        'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
+        'slp_psd_UX','slp_psd_VY','slp_psd_W'};
+
+for i_p = 1:Npl
+    plane = planes{i_p};
+    
+    if ismember(plane,{'ATR-EUREC4A','TO-POST'})
+        fprintf('%s\n',plane)
+        
+        MOM = MOM_vec{i_p};
+        
+        G_std = groupsummary(MOM,{'level','dir2'},{'std'},vars);
+        
+        G_std = addvars(G_std, groupsummary(MOM,{'level','dir2'},{'mean'},{'alt'}).mean_alt,...
+            'After',3,'NewVariableNames','alt');
+                
+        G_std_sqrtN = G_std;
+        G_std_sqrtN{:,5:end} = G_std{:,5:end}./repmat(sqrt(G_std.GroupCount),1,size(G_std,2)-4);
+        
+        print_table(G_std_sqrtN,{'level','dir2'},["GroupCount","std_"+vars],0,0,3)
+        
+    end
+end
 
 
 
@@ -468,7 +462,7 @@ for i_p = 1:Npl
     % (Pv/Pu,Dv/Du)
     
     [fig,ax] = plot_xy_uni(MOM,{'ar_psd_VU'},{'ar_sfc_VU'},'level_id','',dirvar,true,...
-        {'ver3/4','ver4/3','hor3/4','hor4/3','cross1'},[],'XLim',ratio_lim,'YLim',ratio_lim);
+        {'ver4/3','hor4/3','cross1'},[],'XLim',ratio_lim,'YLim',ratio_lim);
     plot(ax,4/3,4/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
     legend(horzcat(levels,{'HIT'}),'Location','northwest','Interpreter','latex')
     xlabel('$P_v/P_u$','Interpreter','latex')
@@ -480,7 +474,7 @@ for i_p = 1:Npl
     % (Pw/Pu,Dw/Du)
     
     [fig,ax] = plot_xy_uni(MOM,{'ar_psd_WU'},{'ar_sfc_WU'},'level_id','',dirvar,true,...
-        {'ver3/4','ver4/3','hor3/4','hor4/3','cross1'},[],'XLim',ratio_lim,'YLim',ratio_lim);
+        {'ver4/3','hor4/3','cross1'},[],'XLim',ratio_lim,'YLim',ratio_lim);
     plot(ax,4/3,4/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
     legend(horzcat(levels,{'HIT'}),'Location','northwest','Interpreter','latex')
     xlabel('$P_w/P_u$','Interpreter','latex')
@@ -526,7 +520,8 @@ for i_p = 1:Npl
 
     
     h = plot_whisker(MOM,{'e_ar_sfc_VU','e_ar_psd_VU','e_ar_sfc_WU','e_ar_psd_WU'},...
-        levels,0,'PrimaryLabels',{'$D_v/D_u$','$P_v/P_u$','$D_w/D_u$','$P_w/P_u$'},'DataLim',e_ratio_lim);
+        levels,0,'PrimaryLabels',{'$D\,v/u$','$P\,v/u$','$D\,w/u$','$P\,w/u$'},...{'$D_v/D_u$','$P_v/P_u$','$D_w/D_u$','$P_w/P_u$'},...
+        'DataLim',e_ratio_lim);
     hold on
     h.axis.YLim = e_ratio_lim;
     ylabel('Uncertainty','Interpreter','latex')
@@ -534,7 +529,8 @@ for i_p = 1:Npl
     print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_ar'],'-dpng','-r300')
     
     h = plot_whisker(MOM,{'e_slp_sfc_UX','e_slp_sfc_VY','e_slp_sfc_W'},...
-        levels,0,'PrimaryLabels',{'$s_u$','$s_v$','$s_w$'},'DataLim',e_s_lim);
+        levels,0,'PrimaryLabels',{'$s\,u$','$s\,v$','$s\,w$'},...{'$s_u$','$s_v$','$s_w$'},...
+        'DataLim',e_s_lim);
     hold on
     h.axis.YLim = e_s_lim;
     ylabel('Uncertainty','Interpreter','latex')
@@ -542,7 +538,8 @@ for i_p = 1:Npl
     print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_slp_sfc'],'-dpng','-r300')
     
     h = plot_whisker(MOM,{'e_slp_psd_UX','e_slp_psd_VY','e_slp_psd_W'},...
-        levels,0,'PrimaryLabels',{'$p_u$','$p_v$','$p_w$'},'DataLim',e_p_lim);
+        levels,0,'PrimaryLabels',{'$p\,u$','$p\,v$','$p\,w$'},...{'$p_u$','$p_v$','$p_w$'},
+        'DataLim',e_p_lim);
     hold on
     h.axis.YLim = e_p_lim;
     ylabel('Uncertainty','Interpreter','latex')

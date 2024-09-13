@@ -1,6 +1,6 @@
 function handles = boxplotGroup(varargin)
 
-fontsize = 12;
+fontsize = 14;
 
 % BOXPLOTGROUP groups boxplots together with horizontal space between groups.
 %   boxplotGroup(x) receives a 1xm cell array where each element is a matrix with
