@@ -8,10 +8,13 @@ height = 12;
 % mx = 0.12;
 % my = 0.12;
 
-font = 14;
-mx = 0.16;
-my = 0.13;
+% font = 14;
+% mx = 0.16;
+% my = 0.13;
 
+font = 16;
+mx = 0.15;
+my = 0.15;
 
 axpos = [mx my 1-1.5*mx 1-1.5*my];
 
@@ -62,7 +65,9 @@ ax = axes('Parent',f,'Position',axpos,...
     'XMinorGrid',xmgrid,'YMinorGrid',ymgrid,'MinorGridAlpha',0.5,...
     'XScale',xscale,'YScale',yscale,...'TickLabelInterpreter','latex',...
     varargin{:});
-hold on                  
+hold on
+title('')
+ax.Title.FontSize = font-2;
 
 
 end

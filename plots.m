@@ -44,6 +44,7 @@ xdir = 'reverse';
 % Plot style
 mks = 8;
 lw = 2;
+font = 16; % affects only legend
 
 % Plot format
 pfrm = '-dpng';
@@ -127,7 +128,7 @@ for i_p = 1:Npl
         
         xlabel(xlab.sfc,'Interpreter','latex')
         ylabel(stat_lab.sfc,'Interpreter','latex')
-        legend(leg_vel,'Location','northeast','Interpreter','latex')
+        legend(leg_vel,'Location','northeast','Interpreter','latex','FontSize',font)
         title(tit)
         print(fig,join([plotpath_plane,psuff,'sfc',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -154,7 +155,7 @@ for i_p = 1:Npl
         
         xlabel(xlab.psd,'Interpreter','latex')
         ylabel(stat_lab.psd,'Interpreter','latex')
-        legend(leg_vel,'Location','northeast','Interpreter','latex')
+        legend(leg_vel,'Location','northeast','Interpreter','latex','FontSize',font)
         title(tit)
         print(fig,join([plotpath_plane,psuff,'psd',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -228,7 +229,7 @@ for i_p = 1:Npl
 
         xlabel(xlab.bth,'Interpreter','latex')
         ylabel(stat_lab.cbth,'Interpreter','latex')
-        legend(leg_vel,'Location','best','Interpreter','latex')
+        legend(leg_vel,'Location','best','Interpreter','latex','FontSize',font)
         title(tit)
         print(fig,join([plotpath_plane,psuff,'c_bth',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -249,7 +250,7 @@ for i_p = 1:Npl
 %         
 %         xlabel(xlab.sfc,'Interpreter','latex')
 %         ylabel(stat_lab.csfc,'Interpreter','latex')
-%         legend(leg_vel,'Location','best','Interpreter','latex')
+%         legend(leg_vel,'Location','best','Interpreter','latex','FontSize',font)
 %         title(tit)
 %         print(fig,join([plotpath_plane,psuff,'c_sfc',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -270,7 +271,7 @@ for i_p = 1:Npl
 %         
 %         xlabel(xlab.psd,'Interpreter','latex')
 %         ylabel(stat_lab.cpsd,'Interpreter','latex')
-%         legend(leg_vel,'Location','best','Interpreter','latex')
+%         legend(leg_vel,'Location','best','Interpreter','latex','FontSize',font)
 %         title(tit)
 %         print(fig,join([plotpath_plane,psuff,'c_psd',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -329,7 +330,7 @@ for i_p = 1:Npl
 
         xlabel(xlab.bth,'Interpreter','latex')
         legend({'$P_v/D_u$','$P_w/D_u$','$D_v/D_u+1$','$D_w/D_u+1$'},...
-            'Location','northeast','Interpreter','latex')
+            'Location','northeast','Interpreter','latex','FontSize',font)
         title(tit)
         print(fig,join([plotpath_plane,'ar_bth',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -347,7 +348,7 @@ for i_p = 1:Npl
 %         plot(sfc_bot_factors(i_p)*dr/L*[1 1],           lim.ar_sbs, '--','Color','black','LineWidth',lw)
 % 
 %         xlabel(xlab.sfc,'Interpreter','latex')
-%         legend({'$D_v/D_u$','$D_w/D_u$'},'Location','best','Interpreter','latex')
+%         legend({'$D_v/D_u$','$D_w/D_u$'},'Location','best','Interpreter','latex','FontSize',font)
 %         title(tit)
 %         print(fig,join([plotpath_plane,'ar_sfc',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
 
@@ -365,7 +366,7 @@ for i_p = 1:Npl
 %         plot(psd_bot_factors(i_p)*dr/L*[1 1],           lim.ar_sbs, '--','Color','black','LineWidth',lw)
 % 
 %         xlabel(xlab.psd,'Interpreter','latex')
-%         legend({'$P_v/P_u$','$P_w/P_u$'},'Location','best','Interpreter','latex')
+%         legend({'$P_v/P_u$','$P_w/P_u$'},'Location','best','Interpreter','latex','FontSize',font)
 %         title(tit)
 %         print(fig,join([plotpath_plane,'ar_psd',MOM.level(i_s),string(i_s)],'_'),pfrm,pres)
         
@@ -400,7 +401,7 @@ for i_p = 1:Npl
     % (Pv/Pu,Dv/Du)
     
     [fig,ax] = plot_xy_uni(MOM,{'ar_psd_VU'},{'ar_sfc_VU'},'level_id','',dirvar,true,...
-        {'ver4/3','hor4/3','cross1'},'XLim',lim.ar,'YLim',lim.ar);
+        {'ver4/3','hor4/3','cross1'},[],'XLim',lim.ar,'YLim',lim.ar);
     plot(ax,4/3,4/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
     legend(horzcat(levels,{'HIT'}),'Location','northwest','Interpreter','latex')
     xlabel('$P_v/P_u$','Interpreter','latex')
@@ -412,9 +413,9 @@ for i_p = 1:Npl
     % (Pw/Pu,Dw/Du)
     
     [fig,ax] = plot_xy_uni(MOM,{'ar_psd_WU'},{'ar_sfc_WU'},'level_id','',dirvar,true,...
-        {'ver4/3','hor4/3','cross1'},'XLim',lim.ar,'YLim',lim.ar);
+        {'ver4/3','hor4/3','cross1'},[],'XLim',lim.ar,'YLim',lim.ar);
     plot(ax,4/3,4/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
-    legend(horzcat(levels,{'HIT'}),'Location','northwest','Interpreter','latex')
+    legend(horzcat(levels,{'HIT'}),'Location','southeast','Interpreter','latex')
     xlabel('$P_w/P_u$','Interpreter','latex')
     ylabel('$D_w/D_u$','Interpreter','latex')
     title(plane)
@@ -425,9 +426,9 @@ for i_p = 1:Npl
 
     [fig,ax] = plot_xy_uni(MOM,{'slp_psd_UX','slp_psd_VY','slp_psd_W'},...
         {'slp_sfc_UX','slp_sfc_VY','slp_sfc_W'},'yN','level_id',dirvar,false,...
-        {'hor2/3','ver5/3'},'XLim',lim.p,'YLim',lim.s);
+        {'hor2/3','ver5/3'},[],'XLim',lim.p,'YLim',lim.s);
     plot(ax,5/3,2/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
-    legend(horzcat(leg_vel,levels,{'K41'}),'Location','northwest','Interpreter','latex')
+    legend(horzcat({'u','v','w'},levels,{'K41'}),'Location','northwest','Interpreter','latex')
     xlabel('$p$','Interpreter','latex')
     ylabel('$s$','Interpreter','latex')
     title(plane)
@@ -497,7 +498,7 @@ for i_p = 1:Npl
 
         xlabel(xlab.bth,'Interpreter','latex')
         ylabel(['$P_',lower(var(4)),'/P_u,\,D_',lower(var(4)),'/D_u+1$'],'Interpreter','latex')
-        legend(levels,'Location','northeast','Interpreter','latex')
+        legend(levels,'Location','northeast','Interpreter','latex','FontSize',font)
         title(plane)
         print(fig,[plotpath_sbs,filesep,plane,'_bth_',lower(var(1:5))],pfrm,pres)
     end   
@@ -531,7 +532,7 @@ for i_p = 1:Npl
     hold on
     h.axis.YLim = lim.e_ar;
     ylabel('Uncertainty','Interpreter','latex')
-    title(plane)
+    title(plane,'FontSize',12)
     print(h.figure,[plotpath_bulk,filesep,plane,'_e_wsk_ar'],pfrm,pres)
     
     
@@ -542,7 +543,7 @@ for i_p = 1:Npl
     hold on
     h.axis.YLim = lim.e_s;
     ylabel('Uncertainty','Interpreter','latex')
-    title(plane)
+    title(plane,'FontSize',12)
     print(h.figure,[plotpath_bulk,filesep,plane,'_e_wsk_slp_sfc'],pfrm,pres)
     
     
@@ -554,7 +555,7 @@ for i_p = 1:Npl
     hold on
     h.axis.YLim = lim.e_p;
     ylabel('Uncertainty','Interpreter','latex')
-    title(plane)
+    title(plane,'FontSize',12)
     print(h.figure,[plotpath_bulk,filesep,plane,'_e_wsk_slp_psd'],pfrm,pres)
 
 end
@@ -563,96 +564,96 @@ end
 
 %% Scale-by-scale bundles
 
-ifnorm = true;
-
-plotpath_bundle = [plotpath,filesep,'bundles'];
-if ~isfolder(plotpath_bundle), mkdir(plotpath_bundle), end
-
-
-for i_p = 1:Npl    
-    plane = planes{i_p};
-    
-    MOM = MOM_vec{i_p};
-    SFC = SFC_vec{i_p};
-    PSD = PSD_vec{i_p};
-    Nseg = size(MOM,1);
-    
-    levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),...
-        'mean_alt','descend').level';
-    Nlvl = numel(levels);
-    for i_l = 1:Nlvl
-        MOM.level_id(MOM.level==levels(i_l)) = i_l;
-    end
-    
-    if ifnorm
-        xlim_sfc = r_L_range;
-        xlim_psd = r_L_range;
-    else
-        xlim_sfc = [min(MOM.dr) r_max];
-        xlim_psd = [2*min(MOM.dr) r_max];
-    end
-    
-    
-    % Dv/Du and Dw/Du
-    
-    for i_v = 1:numel(vars_ar)
-        var = vars_ar{i_v};
-        
-        [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
-            'XLim',xlim_sfc,'YLim',lim.ar_sbs);
-        
-        for i_l = 1:Nlvl
-            plot(nan,nan,'Color',co(i_l,:))
-        end
-
-        for i_s = 1:Nseg
-            if ifnorm
-                L = MOM.int_scale(i_s);
-            else
-                L = 1;
-            end
-            plot(SFC(i_s).r/L,SFC(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
-        end
-
-        plot(xlim_sfc,4/3*[1 1],'--','Color','black','LineWidth',lw)
-
-        xlabel(xlab.sfc,'Interpreter','latex')
-        ylabel(['$D_',lower(var(end-1)),'/D_u$'],'Interpreter','latex')
-        legend(levels,'Location','best','Interpreter','latex')
-        title(plane)
-        print(fig,[plotpath_bundle,filesep,plane,'_sfc_',lower(var)],pfrm,pres)
-    end
-    
-    
-    % Pv/Pu and Pw/Pu
-    
-    for i_v = 1:numel(vars_ar)
-        var = vars_ar{i_v};
-        
-        [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
-            'XLim',xlim_psd,'YLim',lim.ar_sbs);
-       
-        for i_l = 1:Nlvl
-            plot(nan,nan,'Color',co(i_l,:))
-        end
-
-        for i_s = 1:Nseg
-            if ifnorm
-                L = MOM.int_scale(i_s);
-            else
-                L = 1;
-            end
-            plot(PSD(i_s).r/L,PSD(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
-        end
-
-        plot(xlim_psd,4/3*[1 1],'--','Color','black','LineWidth',lw)
-
-        xlabel(xlab.psd,'Interpreter','latex')
-        ylabel(['$P_',lower(var(end-1)),'/P_u$'],'Interpreter','latex')
-        legend(levels,'Location','best','Interpreter','latex')
-        title(plane)
-        print(fig,[plotpath_bundle,filesep,plane,'_psd_',lower(var)],pfrm,pres)
-    end
-    
-end
+% ifnorm = true;
+% 
+% plotpath_bundle = [plotpath,filesep,'bundles'];
+% if ~isfolder(plotpath_bundle), mkdir(plotpath_bundle), end
+% 
+% 
+% for i_p = 1:Npl    
+%     plane = planes{i_p};
+%     
+%     MOM = MOM_vec{i_p};
+%     SFC = SFC_vec{i_p};
+%     PSD = PSD_vec{i_p};
+%     Nseg = size(MOM,1);
+%     
+%     levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),...
+%         'mean_alt','descend').level';
+%     Nlvl = numel(levels);
+%     for i_l = 1:Nlvl
+%         MOM.level_id(MOM.level==levels(i_l)) = i_l;
+%     end
+%     
+%     if ifnorm
+%         xlim_sfc = r_L_range;
+%         xlim_psd = r_L_range;
+%     else
+%         xlim_sfc = [min(MOM.dr) r_max];
+%         xlim_psd = [2*min(MOM.dr) r_max];
+%     end
+%     
+%     
+%     % Dv/Du and Dw/Du
+%     
+%     for i_v = 1:numel(vars_ar)
+%         var = vars_ar{i_v};
+%         
+%         [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
+%             'XLim',xlim_sfc,'YLim',lim.ar_sbs);
+%         
+%         for i_l = 1:Nlvl
+%             plot(nan,nan,'Color',co(i_l,:))
+%         end
+% 
+%         for i_s = 1:Nseg
+%             if ifnorm
+%                 L = MOM.int_scale(i_s);
+%             else
+%                 L = 1;
+%             end
+%             plot(SFC(i_s).r/L,SFC(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
+%         end
+% 
+%         plot(xlim_sfc,4/3*[1 1],'--','Color','black','LineWidth',lw)
+% 
+%         xlabel(xlab.sfc,'Interpreter','latex')
+%         ylabel(['$D_',lower(var(end-1)),'/D_u$'],'Interpreter','latex')
+%         legend(levels,'Location','best','Interpreter','latex')
+%         title(plane)
+%         print(fig,[plotpath_bundle,filesep,plane,'_sfc_',lower(var)],pfrm,pres)
+%     end
+%     
+%     
+%     % Pv/Pu and Pw/Pu
+%     
+%     for i_v = 1:numel(vars_ar)
+%         var = vars_ar{i_v};
+%         
+%         [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
+%             'XLim',xlim_psd,'YLim',lim.ar_sbs);
+%        
+%         for i_l = 1:Nlvl
+%             plot(nan,nan,'Color',co(i_l,:))
+%         end
+% 
+%         for i_s = 1:Nseg
+%             if ifnorm
+%                 L = MOM.int_scale(i_s);
+%             else
+%                 L = 1;
+%             end
+%             plot(PSD(i_s).r/L,PSD(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
+%         end
+% 
+%         plot(xlim_psd,4/3*[1 1],'--','Color','black','LineWidth',lw)
+% 
+%         xlabel(xlab.psd,'Interpreter','latex')
+%         ylabel(['$P_',lower(var(end-1)),'/P_u$'],'Interpreter','latex')
+%         legend(levels,'Location','best','Interpreter','latex')
+%         title(plane)
+%         print(fig,[plotpath_bundle,filesep,plane,'_psd_',lower(var)],pfrm,pres)
+%     end
+%     
+% end
 

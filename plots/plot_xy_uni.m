@@ -1,9 +1,11 @@
 
-function [fig,ax] = plot_xy_uni(T,xfields,yfields,cfield,mfield,bifield,ifequal,blines,varargin)
+function [fig,ax] = plot_xy_uni(T,xfields,yfields,cfield,mfield,bifield,ifequal,blines,mks,varargin)
 
-mks = 6;
 lw = 2;
 
+if nargin<9 || isempty(mks)
+    mks = 6;
+end
 if nargin<8
     blines = {};
 end

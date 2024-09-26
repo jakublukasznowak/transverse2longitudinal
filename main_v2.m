@@ -87,7 +87,7 @@ psd_bot_factors = [4 4 4 6];
 sfc_upp_factor = 1.0; % one number for all planes/experiments
 psd_upp_factor = 2.0; 
 
-% Fit point number
+% Fit points
 sfc_fit_points = 5;
 psd_fit_points = 5;
 
