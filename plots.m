@@ -498,7 +498,7 @@ for i_p = 1:Npl
 
         xlabel(xlab.bth,'Interpreter','latex')
         ylabel(['$P_',lower(var(4)),'/P_u,\,D_',lower(var(4)),'/D_u+1$'],'Interpreter','latex')
-        legend(levels,'Location','northeast','Interpreter','latex','FontSize',font)
+        legend(levels,'Location','northeast','Interpreter','latex') %,'FontSize',font)
         title(plane)
         print(fig,[plotpath_sbs,filesep,plane,'_bth_',lower(var(1:5))],pfrm,pres)
     end   
