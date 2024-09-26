@@ -8,14 +8,6 @@ scale_by_scale_2_avg
 vars_vel = {'UX','VY','W'};
 vars_ar = {'ar_VU','ar_WU'};
 
-% Fit range: bottom limit (= factor*dr)
-sfc_bot_factors = [2 2 2 3]; % list of factors for each plane/experiment
-psd_bot_factors = [4 4 4 6];
-
-% Fit range: upper limit (= factor*L)
-sfc_upp_factor = 1.0; % one number for all planes/experiments
-psd_upp_factor = 2.0; 
-
 % Example segments to plot
 examples = {["RF12","R2B"],["RF06","SC01"],["RF09","C6"],["RF12","CB01"]};
 
@@ -52,7 +44,8 @@ lw = 2;
 
 % Plot format
 pfrm = '-dpng';
-% Plot resolutions
+
+% Plot resolution
 pres = '-r300';
 
 
@@ -60,6 +53,214 @@ pres = '-r300';
 addpath(genpath(myprojectpath))
 plotpath = [myprojectpath,filesep,'figures',filesep,'scale_by_scale'];
 if ~isfolder(plotpath), mkdir(plotpath), end
+
+
+
+
+% Example segments to plot sfc/psd
+examples = {["RF12","R2B"],["RF06","SC01"],["RF09","C6"],["RF12","CB01"]}; % [flight, name] for each plane/experiment
+
+
+addpath(genpath(myprojectpath))
+plotpath = [myprojectpath,filesep,'figures'];
+if ~isfolder(plotpath), mkdir(plotpath), end
+
+
+
+
+%% Plot results
+
+disp('Plot results ...')
+
+plotpath_res = [plotpath,filesep,'main'];
+if ~isfolder(plotpath_res), mkdir(plotpath_res), end
+
+% Ax limits
+ratio_lim = [0 1.6];
+p_lim = [0.4 2.5];
+s_lim = [0 1.3];
+
+
+for i_p = 1:Npl    
+    plane = planes{i_p};
+    fprintf('%s\n',plane)
+    
+    MOM = MOM_vec{i_p};
+    
+    if ismember(plane,{'ATR-EUREC4A','TO-POST'})
+        dirvar = 'dir2';
+    else
+        dirvar = '';
+    end
+    
+    levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),'mean_alt','descend').level';
+    for i_l = 1:numel(levels)
+        MOM.level_id(MOM.level==levels(i_l)) = i_l;
+    end
+    
+    
+    % (Pv/Pu,Dv/Du)
+    
+    [fig,ax] = plot_xy_uni(MOM,{'ar_psd_VU'},{'ar_sfc_VU'},'level_id','',dirvar,true,...
+        {'ver4/3','hor4/3','cross1'},[],'XLim',ratio_lim,'YLim',ratio_lim);
+    plot(ax,4/3,4/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
+    legend(horzcat(levels,{'HIT'}),'Location','northwest','Interpreter','latex')
+    xlabel('$P_v/P_u$','Interpreter','latex')
+    ylabel('$D_v/D_u$','Interpreter','latex')
+    title(plane)
+    print(fig,[plotpath_res,filesep,plane,'_ar_uv'],'-dpng','-r300')
+    
+    
+    % (Pw/Pu,Dw/Du)
+    
+    [fig,ax] = plot_xy_uni(MOM,{'ar_psd_WU'},{'ar_sfc_WU'},'level_id','',dirvar,true,...
+        {'ver4/3','hor4/3','cross1'},[],'XLim',ratio_lim,'YLim',ratio_lim);
+    plot(ax,4/3,4/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
+    legend(horzcat(levels,{'HIT'}),'Location','northwest','Interpreter','latex')
+    xlabel('$P_w/P_u$','Interpreter','latex')
+    ylabel('$D_w/D_u$','Interpreter','latex')
+    title(plane)
+    print(fig,[plotpath_res,filesep,plane,'_ar_uw'],'-dpng','-r300')
+    
+    
+    % (p,s)
+
+    [fig,ax] = plot_xy_uni(MOM,{'slp_psd_UX','slp_psd_VY','slp_psd_W'},...
+        {'slp_sfc_UX','slp_sfc_VY','slp_sfc_W'},'yN','level_id',dirvar,false,...
+        {'hor2/3','ver5/3'},[],'XLim',p_lim,'YLim',s_lim);
+    plot(ax,5/3,2/3,'d','Color',"#77AC30",'MarkerFaceColor',"#77AC30",'MarkerSize',12)
+    legend(horzcat({'u','v','w'},levels,{'K41'}),'Location','northwest','Interpreter','latex')
+    xlabel('$p$','Interpreter','latex')
+    ylabel('$s$','Interpreter','latex')
+    title(plane)
+    print(fig,[plotpath_res,filesep,plane,'_slp'],'-dpng','-r300')
+    
+end
+
+
+
+%% Plot uncertainties in box-whisker
+
+% Ax limits
+e_ratio_lim = [0 0.3];
+e_s_lim = [0 0.1];
+e_p_lim = [0 0.3];
+
+
+for i_p = 1:Npl    
+    plane = planes{i_p};
+    fprintf('%s\n',plane)
+    
+    MOM = MOM_vec{i_p};
+
+    levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),'mean_alt','descend').level';
+    for i_l = 1:numel(levels)
+        MOM.level_id(MOM.level==levels(i_l)) = i_l;
+    end
+
+    
+    h = plot_whisker(MOM,{'e_ar_sfc_VU','e_ar_psd_VU','e_ar_sfc_WU','e_ar_psd_WU'},...
+        levels,0,'PrimaryLabels',{'$D\,v/u$','$P\,v/u$','$D\,w/u$','$P\,w/u$'},...{'$D_v/D_u$','$P_v/P_u$','$D_w/D_u$','$P_w/P_u$'},...
+        'DataLim',e_ratio_lim);
+    hold on
+    h.axis.YLim = e_ratio_lim;
+    ylabel('Uncertainty','Interpreter','latex')
+    title(plane)
+    print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_ar'],'-dpng','-r300')
+    
+    h = plot_whisker(MOM,{'e_slp_sfc_UX','e_slp_sfc_VY','e_slp_sfc_W'},...
+        levels,0,'PrimaryLabels',{'$s\,u$','$s\,v$','$s\,w$'},...{'$s_u$','$s_v$','$s_w$'},...
+        'DataLim',e_s_lim);
+    hold on
+    h.axis.YLim = e_s_lim;
+    ylabel('Uncertainty','Interpreter','latex')
+    title(plane)
+    print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_slp_sfc'],'-dpng','-r300')
+    
+    h = plot_whisker(MOM,{'e_slp_psd_UX','e_slp_psd_VY','e_slp_psd_W'},...
+        levels,0,'PrimaryLabels',{'$p\,u$','$p\,v$','$p\,w$'},...{'$p_u$','$p_v$','$p_w$'},
+        'DataLim',e_p_lim);
+    hold on
+    h.axis.YLim = e_p_lim;
+    ylabel('Uncertainty','Interpreter','latex')
+    title(plane)
+    print(h.figure,[plotpath_res,filesep,plane,'_e_wsk_slp_psd'],'-dpng','-r300')
+
+end
+
+
+
+disp('Plot example segments ...')
+
+plotpath_ex = [plotpath,filesep,'examples'];
+if ~isfolder(plotpath_ex), mkdir(plotpath_ex), end
+
+
+for i_p = 1:Npl    
+    plane = planes{i_p};
+    fprintf('%s\n',plane)
+    
+    if ~isfolder([plotpath_ex,filesep,plane]), mkdir([plotpath_ex,filesep,plane]), end
+    
+    MOM = MOM_vec{i_p};
+    TURB = TURB_vec{i_p};
+    
+    if ~isempty(examples)
+        ind_s = find( MOM.flight==examples{i_p}(1) & MOM.name==examples{i_p}(2) );
+        plotpath_plane = [plotpath_ex,filesep,plane,'_'];
+        ylim_sfc = [1e-2 0.3];
+        ylim_psd = [1e-4 1];
+    else % if there is no example list, plot all segments
+        ind_s = 1:Nseg;
+        plotpath_plane = [plotpath_ex,filesep,plane,filesep];
+        ylim_sfc = [-inf inf];
+        ylim_psd = [-inf inf];
+    end
+    
+    
+    for ii_s = 1:numel(ind_s)
+        i_s = ind_s(ii_s);
+        dr = MOM.dr(i_s);
+    
+        
+        % Structure functions
+
+        for i_v = 1:Nvar
+            var = vars{i_v};
+
+            fit_sfc( detrend(TURB(i_s).(var)), dr, MOM.sfc_fit_range(i_s,:), ...
+                'Method',sfc_method, 'FitPoints',sfc_fit_points, ...
+                'Plot',true, 'PlotXLim',[dr 400], 'PlotYLim',ylim_sfc);
+
+            ylabel(['$D_',lower(var(1)),'\,[\mathrm{m^2\,s^{-2}}]$'],'Interpreter','latex')
+            title(join([plane,MOM.flight(i_s),MOM.name(i_s),round(MOM.alt(i_s)),'m']))
+            print(gcf,join([[plotpath_plane,'sfc'],MOM.level(i_s),var,string(i_s)],'_'),'-dpng','-r300')
+        end
+
+
+        % Power spectra
+
+        for i_v = 1:Nvar
+            var = vars{i_v};
+
+            fit_psd( detrend(TURB(i_s).(var)), dr, MOM.psd_fit_range(i_s,:), ...
+                'Method',psd_method, 'FitPoints',psd_fit_points, ...
+                'WindowLength',floor(psd_win_length/dr), 'WindowOverlap',floor(psd_win_overlap/dr), ...
+                'Plot',true, 'PlotXLim',[2*dr 400], 'PlotYLim',ylim_psd);       
+
+            ylabel(['$P_',lower(var(1)),'\,[\mathrm{m^2\,s^{-2}\,rad^{-1}}]$'],'Interpreter','latex')
+            title(join([plane,MOM.flight(i_s),MOM.name(i_s),round(MOM.alt(i_s)),'m']))
+            print(gcf,join([[plotpath_plane,'psd'],MOM.level(i_s),var,string(i_s)],'_'),'-dpng','-r300')
+        end
+        
+        close all
+    end
+    
+    close all
+end
+
+
+
 
 
 

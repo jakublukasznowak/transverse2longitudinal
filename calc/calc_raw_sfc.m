@@ -30,6 +30,7 @@ end
 % Prepare the list of displacements
 
 iv = ( floor(range(1)/dr) : ceil(range(2)/dr) )';
+% iv = ( ceil(range(1)/dr) : range(2)/dr )';
 rv = iv*dr;
 Li = length(iv);
 

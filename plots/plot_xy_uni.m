@@ -1,10 +1,9 @@
 
-function [fig,ax] = plot_xy_uni(T,xfields,yfields,cfield,mfield,bifield,ifequal,blines,mks,varargin)
+function [fig,ax] = plot_xy_uni(T,xfields,yfields,cfield,mfield,bifield,ifequal,blines,varargin)
 
+mks = 6;
+lw = 2;
 
-if nargin<9 || isempty(mks)
-    mks = 6;
-end
 if nargin<8
     blines = {};
 end
@@ -54,10 +53,7 @@ end
 Nc = numel(cvals);
 Nm = numel(mvals);
 Nb = numel(bvals);
-    
 
-
-lw = 1.5;
 
 
 [fig,ax,co] = fig16x12('linlin',[1 1],'on',varargin{:});

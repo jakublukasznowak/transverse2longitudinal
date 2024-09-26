@@ -309,11 +309,11 @@ for i_p = 1:Npl
     
     MOM = MOM_vec{i_p};
     
-    print_table(MOM,{'alt','int_scale','length_km'},true,0)
+    print_table(MOM,{'level'},{'alt','int_scale','length_km'},true,true,0)
 
     print_table(MOM,{'level'},{'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU'})
     
-    print_table(MOM,{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
+    print_table(MOM,{'level'},{'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
                      'slp_psd_UX','slp_psd_VY','slp_psd_W'})
     
 %     CNT = MOM(MOM.N_sfc_UX<sfc_min_fit_points,:);
