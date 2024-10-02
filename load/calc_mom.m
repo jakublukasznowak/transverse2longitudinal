@@ -29,7 +29,9 @@ for i_s = 1:Nseg
 end
 
 
-MOM.length = seconds(MOM.end-MOM.start).*MOM.MEAN_TAS;
+if ismember('MEAN_TAS',MOM.Properties.VariableNames)
+    MOM.length = seconds(MOM.end-MOM.start).*MOM.MEAN_TAS;
+end
 
 
 if all(ismember({'MEAN_U','MEAN_V'},MOM.Properties.VariableNames))

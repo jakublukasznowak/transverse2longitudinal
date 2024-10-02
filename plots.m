@@ -45,6 +45,7 @@ xdir = 'reverse';
 mks = 8;
 lw = 2;
 font = 16; % affects only legend
+alpha = 0.25;
 
 % Plot format
 pfrm = '-dpng';
@@ -441,12 +442,13 @@ end
 %% Scale-by-scale ratios
 
 ifnorm = true;
+lvl_std = {'cloud-base','cloud-base','sub-cloud','near-surface'};
 
 plotpath_sbs = [plotpath,filesep,'sbs'];
 if ~isfolder(plotpath_sbs), mkdir(plotpath_sbs), end 
 
 
-for i_p = 1:Npl    
+for i_p = 1:Npl  
     plane = planes{i_p};
     
     MOM   = MOM_vec{i_p};
@@ -482,6 +484,22 @@ for i_p = 1:Npl
         [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
             'XLim',xlim_psd,'YLim',lim.ar_sbs+[0 1]);
         
+        i_l = find(strcmp(lvl_std{i_p},levels));
+        if ~isempty(i_l)
+%         for i_l = 1:Nlvl
+            c = co(i_l,:);
+%             plot( avPSD(i_l).(xvar), avPSD(i_l).(var) + avPSD(i_l).([var,'_std']), '--', 'Color',c,'HandleVisibility','off')
+%             plot( avPSD(i_l).(xvar), avPSD(i_l).(var) - avPSD(i_l).([var,'_std']), '--', 'Color',c,'HandleVisibility','off')
+%             plot( avSFC(i_l).(xvar), avSFC(i_l).(var) + avSFC(i_l).([var,'_std']) +1, '--', 'Color',c,'HandleVisibility','off')
+%             plot( avSFC(i_l).(xvar), avSFC(i_l).(var) - avSFC(i_l).([var,'_std']) +1, '--', 'Color',c,'HandleVisibility','off')
+            x = avPSD(i_l).(xvar); y = avPSD(i_l).(var); dy = avPSD(i_l).([var,'_std']);
+            x = x(~isnan(y)); dy = dy(~isnan(y)); y = y(~isnan(y));
+            patch( [x; flip(x)], [y-dy; flip(y+dy)], c,'FaceAlpha',alpha,'LineStyle','none','HandleVisibility','off')
+            x = avSFC(i_l).(xvar); y = avSFC(i_l).(var); dy = avSFC(i_l).([var,'_std']);
+            x = x(~isnan(y)); dy = dy(~isnan(y)); y = y(~isnan(y));
+            patch( [x; flip(x)], [y-dy; flip(y+dy)]+1, c,'FaceAlpha',alpha,'LineStyle','none','HandleVisibility','off')
+        end
+        
         for i_l = 1:Nlvl
             c = co(i_l,:);
             plot( avPSD(i_l).(xvar), avPSD(i_l).(var), 'o-', ...
@@ -492,7 +510,7 @@ for i_p = 1:Npl
             plot( avSFC(i_l).(xvar), avSFC(i_l).(var)+1, 'o-', ...
                 'MarkerSize',mks,'Color',c)
         end
-
+                    
         plot(xlim_sfc,4/3*[1 1], '--','Color','black','LineWidth',lw)
         plot(xlim_sfc,4/3*[1 1]+1,':','Color','black','LineWidth',lw)
 
@@ -564,96 +582,96 @@ end
 
 %% Scale-by-scale bundles
 
-% ifnorm = true;
-% 
-% plotpath_bundle = [plotpath,filesep,'bundles'];
-% if ~isfolder(plotpath_bundle), mkdir(plotpath_bundle), end
-% 
-% 
-% for i_p = 1:Npl    
-%     plane = planes{i_p};
-%     
-%     MOM = MOM_vec{i_p};
-%     SFC = SFC_vec{i_p};
-%     PSD = PSD_vec{i_p};
-%     Nseg = size(MOM,1);
-%     
-%     levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),...
-%         'mean_alt','descend').level';
-%     Nlvl = numel(levels);
-%     for i_l = 1:Nlvl
-%         MOM.level_id(MOM.level==levels(i_l)) = i_l;
-%     end
-%     
-%     if ifnorm
-%         xlim_sfc = r_L_range;
-%         xlim_psd = r_L_range;
-%     else
-%         xlim_sfc = [min(MOM.dr) r_max];
-%         xlim_psd = [2*min(MOM.dr) r_max];
-%     end
-%     
-%     
-%     % Dv/Du and Dw/Du
-%     
-%     for i_v = 1:numel(vars_ar)
-%         var = vars_ar{i_v};
-%         
-%         [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
-%             'XLim',xlim_sfc,'YLim',lim.ar_sbs);
-%         
-%         for i_l = 1:Nlvl
-%             plot(nan,nan,'Color',co(i_l,:))
-%         end
-% 
-%         for i_s = 1:Nseg
-%             if ifnorm
-%                 L = MOM.int_scale(i_s);
-%             else
-%                 L = 1;
-%             end
-%             plot(SFC(i_s).r/L,SFC(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
-%         end
-% 
-%         plot(xlim_sfc,4/3*[1 1],'--','Color','black','LineWidth',lw)
-% 
-%         xlabel(xlab.sfc,'Interpreter','latex')
-%         ylabel(['$D_',lower(var(end-1)),'/D_u$'],'Interpreter','latex')
-%         legend(levels,'Location','best','Interpreter','latex')
-%         title(plane)
-%         print(fig,[plotpath_bundle,filesep,plane,'_sfc_',lower(var)],pfrm,pres)
-%     end
-%     
-%     
-%     % Pv/Pu and Pw/Pu
-%     
-%     for i_v = 1:numel(vars_ar)
-%         var = vars_ar{i_v};
-%         
-%         [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
-%             'XLim',xlim_psd,'YLim',lim.ar_sbs);
-%        
-%         for i_l = 1:Nlvl
-%             plot(nan,nan,'Color',co(i_l,:))
-%         end
-% 
-%         for i_s = 1:Nseg
-%             if ifnorm
-%                 L = MOM.int_scale(i_s);
-%             else
-%                 L = 1;
-%             end
-%             plot(PSD(i_s).r/L,PSD(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
-%         end
-% 
-%         plot(xlim_psd,4/3*[1 1],'--','Color','black','LineWidth',lw)
-% 
-%         xlabel(xlab.psd,'Interpreter','latex')
-%         ylabel(['$P_',lower(var(end-1)),'/P_u$'],'Interpreter','latex')
-%         legend(levels,'Location','best','Interpreter','latex')
-%         title(plane)
-%         print(fig,[plotpath_bundle,filesep,plane,'_psd_',lower(var)],pfrm,pres)
-%     end
-%     
-% end
+ifnorm = true;
+
+plotpath_bundle = [plotpath,filesep,'bundles'];
+if ~isfolder(plotpath_bundle), mkdir(plotpath_bundle), end
+
+
+for i_p = 1:Npl    
+    plane = planes{i_p};
+    
+    MOM = MOM_vec{i_p};
+    SFC = SFC_vec{i_p};
+    PSD = PSD_vec{i_p};
+    Nseg = size(MOM,1);
+    
+    levels = sortrows(groupsummary(MOM,{'level'},{'mean'},{'alt'}),...
+        'mean_alt','descend').level';
+    Nlvl = numel(levels);
+    for i_l = 1:Nlvl
+        MOM.level_id(MOM.level==levels(i_l)) = i_l;
+    end
+    
+    if ifnorm
+        xlim_sfc = r_L_range;
+        xlim_psd = r_L_range;
+    else
+        xlim_sfc = [min(MOM.dr) r_max];
+        xlim_psd = [2*min(MOM.dr) r_max];
+    end
+    
+    
+    % Dv/Du and Dw/Du
+    
+    for i_v = 1:numel(vars_ar)
+        var = vars_ar{i_v};
+        
+        [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
+            'XLim',xlim_sfc,'YLim',lim.ar_sbs);
+        
+        for i_l = 1:Nlvl
+            plot(nan,nan,'Color',co(i_l,:))
+        end
+
+        for i_s = 1:Nseg
+            if ifnorm
+                L = MOM.int_scale(i_s);
+            else
+                L = 1;
+            end
+            plot(SFC(i_s).r/L,SFC(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
+        end
+
+        plot(xlim_sfc,4/3*[1 1],'--','Color','black','LineWidth',lw)
+
+        xlabel(xlab.sfc,'Interpreter','latex')
+        ylabel(['$D_',lower(var(end-1)),'/D_u$'],'Interpreter','latex')
+        legend(levels,'Location','best','Interpreter','latex')
+        title(plane)
+        print(fig,[plotpath_bundle,filesep,plane,'_sfc_',lower(var)],pfrm,pres)
+    end
+    
+    
+    % Pv/Pu and Pw/Pu
+    
+    for i_v = 1:numel(vars_ar)
+        var = vars_ar{i_v};
+        
+        [fig,~,co] = fig16x12('loglin',[1 1],'on','XDir',xdir,...
+            'XLim',xlim_psd,'YLim',lim.ar_sbs);
+       
+        for i_l = 1:Nlvl
+            plot(nan,nan,'Color',co(i_l,:))
+        end
+
+        for i_s = 1:Nseg
+            if ifnorm
+                L = MOM.int_scale(i_s);
+            else
+                L = 1;
+            end
+            plot(PSD(i_s).r/L,PSD(i_s).(var),'-','Color',co(MOM.level_id(i_s),:))
+        end
+
+        plot(xlim_psd,4/3*[1 1],'--','Color','black','LineWidth',lw)
+
+        xlabel(xlab.psd,'Interpreter','latex')
+        ylabel(['$P_',lower(var(end-1)),'/P_u$'],'Interpreter','latex')
+        legend(levels,'Location','best','Interpreter','latex')
+        title(plane)
+        print(fig,[plotpath_bundle,filesep,plane,'_psd_',lower(var)],pfrm,pres)
+    end
+    
+end
 

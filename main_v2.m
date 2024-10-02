@@ -120,6 +120,7 @@ outputfile = [myprojectpath,filesep,'results.mat'];
 
 % Turn off warnings
 warning('off','LOGMEAN:EmptyBins')
+warning('off','FIT_PSD:InvalidFitRange')
 
 % Add to path
 addpath(genpath(myprojectpath))
@@ -375,6 +376,8 @@ for i_p = 1:Npl
             
             avSFC{i_l}.(var) = mean( horzcat(SFC(ind_l).(var)), 2 ,'omitnan');
             avPSD{i_l}.(var) = mean( horzcat(PSD(ind_l).(var)), 2, 'omitnan');
+            avSFC{i_l}.([var,'_std']) = std( horzcat(SFC(ind_l).(var)), 0, 2 ,'omitnan');
+            avPSD{i_l}.([var,'_std']) = std( horzcat(PSD(ind_l).(var)), 0, 2, 'omitnan');
         end
     end
     

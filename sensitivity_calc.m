@@ -29,12 +29,14 @@ psd_win_overlap = 500; % m
 
 
 % Output file
-outputfile = [myprojectpath,filesep,'sensitivity2.mat'];
+outputfile = [myprojectpath,filesep,'sensitivity.mat'];
 
 
 % Turn off warnings
 warning('off','LOGMEAN:EmptyBins')
-
+warning('off','FIT_SFC:InvalidFitRange')
+warning('off','FIT_PSD:InvalidFitRange')
+warning('off','backtrace')
 
 % Add to path
 addpath(genpath(myprojectpath))
@@ -109,13 +111,23 @@ for i_p = 1:Npl
             
             for i_s = 1:Nseg
                 dr = MOM.dr(i_s);
-                sfc_fit_range = [dr*sfc_bot_factors(i_p) MOM.int_scale(i_s)*sfc_upp_factor(i_f)];
+                sfc_fit_range = [dr*sfc_bot_factors(i_p) MOM.int_scale(i_s)*sfc_upp_factors(i_f)];
                 
-                [MOM.(['off_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = ...
-                fit_sfc( detrend(TURB(i_s).(var)), dr, sfc_fit_range, ...
-                'Method','logmean', 'FitPoints',sfc_fit_points );
-            
-                MOM{i_s,["e_off","e_slp","R2","N"]+"_sfc_"+var} = [es.O es.slp es.R2 es.N];
+                try
+                    [MOM.(['off_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = ...
+                        fit_sfc( detrend(TURB(i_s).(var)), dr, sfc_fit_range, ...
+                        'Method','logmean', 'FitPoints',sfc_fit_points );
+                    MOM{i_s,["e_off","e_slp","R2","N"]+"_sfc_"+var} = [es.O es.slp es.R2 es.N];
+                catch ME
+                    if strcmp(ME.identifier,'FIT_SFC:TooFewFitPoints')
+                        fprintf('\n')
+                        warning(ME.identifier,['In seg %d: ',getReport(ME,'basic')],i_s)
+                        MOM{i_s,"N_sfc_"+var} = 0;
+                    else
+                        throw(ME)
+                    end
+                end
+                    
                 if MOM{i_s,"N_sfc_"+var} < sfc_min_fit_points
                     MOM{i_s,["off","slp","e_off","e_slp","R2"]+"_sfc_"+var} = nan;
                 end
@@ -135,14 +147,24 @@ for i_p = 1:Npl
             
             for i_s = 1:Nseg
                 dr = MOM.dr(i_s);
-                psd_fit_range = [dr*psd_bot_factors(i_p) MOM.int_scale(i_s)*psd_upp_factor(i_f)];
-
-                [MOM.(['off_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),es] = ...
-                fit_psd( detrend(TURB(i_s).(var)), dr, psd_fit_range, ...
-                'Method','logmean', 'FitPoints',psd_fit_points, ...
-                'WindowLength',floor(psd_win_length/dr), 'WindowOverlap',floor(psd_win_overlap/dr) );
-
-                MOM{i_s,["e_off","e_slp","R2","N"]+"_psd_"+var} = [es.O es.slp es.R2 es.N];
+                psd_fit_range = [dr*psd_bot_factors(i_p) MOM.int_scale(i_s)*psd_upp_factors(i_f)];
+                
+                try
+                    [MOM.(['off_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),es] = ...
+                        fit_psd( detrend(TURB(i_s).(var)), dr, psd_fit_range, ...
+                        'Method','logmean', 'FitPoints',psd_fit_points, ...
+                        'WindowLength',floor(psd_win_length/dr), 'WindowOverlap',floor(psd_win_overlap/dr) );
+                    MOM{i_s,["e_off","e_slp","R2","N"]+"_psd_"+var} = [es.O es.slp es.R2 es.N];
+                catch ME
+                    if strcmp(ME.identifier,'FIT_PSD:TooFewFitPoints')
+                        fprintf('\n')
+                        warning(ME.identifier,['In seg %d: ',getReport(ME,'basic')],i_s)
+                        MOM{i_s,"N_psd_"+var} = 0;
+                    else
+                        throw(ME)
+                    end
+                end
+                
                 if MOM{i_s,"N_psd_"+var} < psd_min_fit_points
                     MOM{i_s,["off","slp","e_off","e_slp","R2"]+"_psd_"+var} = nan;
                 end  

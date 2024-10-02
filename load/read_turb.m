@@ -35,8 +35,11 @@ for i_f = 1:Nf
     
     % Flight number
     
-    flight = textscan(d(i_f).name,'%4s',1);
-    DATA{i_f}.flight = string(flight{1}{1});
+%     flight = textscan(d(i_f).name,'%4s',1);
+%     DATA{i_f}.flight = string(flight{1}{1});
+    irf = strfind(d(i_f).name,'RF');
+    flight = d(i_f).name(irf:irf+3);
+    DATA{i_f}.flight = string(flight);
     
     
     % Time
