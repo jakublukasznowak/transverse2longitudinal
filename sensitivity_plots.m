@@ -1,5 +1,5 @@
 
-
+%% Settings
 
 % Axes limits
 lim_sum.ar = [0.6 1.4];
@@ -8,7 +8,6 @@ lim_sum.p  = [1.0 2.2];
 lim_bulk.ar= [0 2];
 lim_bulk.s = [0 1.5];
 lim_bulk.p = [0 2.5];
-
 
 % Plot style
 mks = 10;
@@ -30,54 +29,6 @@ if ~isfolder(plotpath), mkdir(plotpath), end
 load([myprojectpath,filesep,'sensitivity.mat'])
 Npl = size(MOM_matrix,1);
 Nfc = size(MOM_matrix,2);
-
-
-
-%% Temporary
-
-
-sum_vars = {'ar_sfc_VU','ar_psd_VU','ar_sfc_WU','ar_psd_WU',...
-    'slp_sfc_UX','slp_sfc_VY','slp_sfc_W',...
-    'slp_psd_UX','slp_psd_VY','slp_psd_W',...
-    'R2_sfc_tot','R2_psd_tot','R2_tot_tot',...
-    'N_sfc_UX','N_psd_UX'};
-
-grp_vars = {'testname','sfc_upp_factor','psd_upp_factor','plane'};
-
-
-% Propagate settings
-
-
-
-for i_p = 1:Npl 
-    plane = planes{i_p};
-      
-    for i_f = 1:Nfc
-        testname = sprintf('sfc %.1fL psd %.1fL',sfc_upp_factors(i_f),psd_upp_factors(i_f));
-        
-        MOM_matrix{i_p,i_f}.plane(:) = string(plane);
-        MOM_matrix{i_p,i_f}.sfc_bot_factor(:) = sfc_bot_factors(i_p);
-        MOM_matrix{i_p,i_f}.psd_bot_factor(:) = psd_bot_factors(i_p);
-        
-        MOM_matrix{i_p,i_f}.testname(:) = string(testname);
-        MOM_matrix{i_p,i_f}.sfc_upp_factor(:) = sfc_upp_factors(i_f);
-        MOM_matrix{i_p,i_f}.psd_upp_factor(:) = psd_upp_factors(i_f);
-        
-        MOM_matrix{i_p,i_f}.R2_sfc_tot = MOM_matrix{i_p,i_f}.R2_sfc_UX .* MOM_matrix{i_p,i_f}.R2_sfc_VY .* MOM_matrix{i_p,i_f}.R2_sfc_W;
-        MOM_matrix{i_p,i_f}.R2_psd_tot = MOM_matrix{i_p,i_f}.R2_psd_UX .* MOM_matrix{i_p,i_f}.R2_psd_VY .* MOM_matrix{i_p,i_f}.R2_psd_W;
-        MOM_matrix{i_p,i_f}.R2_tot_tot = MOM_matrix{i_p,i_f}.R2_sfc_tot .* MOM_matrix{i_p,i_f}.R2_psd_tot;
-    end
-end
-
-
-% Generate group summary table
-
-temp =  cellfun(@(x) x(:,horzcat(grp_vars,sum_vars)),MOM_matrix(:),'UniformOutput',false);
-MOM = vertcat(temp{:});
-
-SUM = groupsummary(MOM,grp_vars,{'mean'},sum_vars);
-
-CNT = groupcounts(MOM,horzcat(grp_vars,{'N_sfc_UX'}));
 
 
 
@@ -140,43 +91,43 @@ print(fig,[plotpath_sum,filesep,'slp_w'],pfrm,pres)
 
 % R2
 
-% fig = plot_xy_uni(SUM,{'mean_R2_psd_tot'},{'mean_R2_sfc_tot'},...
-%     'testname','plane',[],true,{'cross1'},mks);
-% xlabel('$R_{Pu}^2R_{Pv}^2R_{Pw}^2$','Interpreter','latex')
-% ylabel('$R_{Du}^2R_{Dv}^2R_{Dw}^2$','Interpreter','latex')
-% print(fig,[plotpath_sum,filesep,'R2_tot'],'-dpng','-r300')
-% 
-% [fig,~,co] = fig16x12;
-% for i_p = 1:Npl
-%     ind = SUM.plane==planes{i_p};
-%     plot(SUM.sfc_upp_factor(ind),SUM.mean_R2_tot_tot(ind),'-o','Color',co(i_p,:))
-% end
-% legend(planes,'Location','best')
-% xlabel('$F$ sfc','Interpreter','latex')
-% ylabel('$R_{Du}^2R_{Dv}^2R_{Dw}^2R_{Pu}^2R_{Pv}^2R_{Pw}^2$','Interpreter','latex')
-% print(fig,[plotpath_sum,filesep,'R2_tot_tot'],pfrm,pres)
+fig = plot_xy_uni(SUM,{'mean_R2_psd_tot'},{'mean_R2_sfc_tot'},...
+    'testname','plane',[],true,{'cross1'},mks);
+xlabel('$R_{Pu}^2R_{Pv}^2R_{Pw}^2$','Interpreter','latex')
+ylabel('$R_{Du}^2R_{Dv}^2R_{Dw}^2$','Interpreter','latex')
+print(fig,[plotpath_sum,filesep,'R2_tot'],'-dpng','-r300')
+
+[fig,~,co] = fig16x12;
+for i_p = 1:Npl
+    ind = SUM.plane==planes{i_p};
+    plot(SUM.sfc_upp_factor(ind),SUM.mean_R2_tot_tot(ind),'-o','Color',co(i_p,:))
+end
+legend(planes,'Location','best')
+xlabel('$F$ sfc','Interpreter','latex')
+ylabel('$R_{Du}^2R_{Dv}^2R_{Dw}^2R_{Pu}^2R_{Pv}^2R_{Pw}^2$','Interpreter','latex')
+print(fig,[plotpath_sum,filesep,'R2_tot_tot'],pfrm,pres)
 
 
 % Rejected segments
 
-% CNTrej = CNT;
-% CNTrej.GroupCount(CNTrej.N_sfc_UX>=sfc_min_fit_points) = 0;
-% CNTrej = groupsummary(CNTrej,{'sfc_upp_factor','plane'},{'sum'},{'GroupCount'});
-% 
-% fig = fig16x12;
-% for i_p = 1:Npl
-%     ind = CNTrej.plane==planes{i_p};
-%     plot(CNTrej.sfc_upp_factor(ind),CNTrej.sum_GroupCount(ind),'-o')
-% end
-% legend(planes,'Location','best')
-% xlabel('$F$ sfc','Interpreter','latex')
-% ylabel('# rejected segments')
-% print(fig,[plotpath_sum,filesep,'rej_tot'],pfrm,pres)
+CNT = groupcounts(MOM,{'N_sfc_UX','testname','sfc_upp_factor','psd_upp_factor','plane'});
+CNTrej = CNT;
+CNTrej.GroupCount(CNTrej.N_sfc_UX>=sfc_min_fit_points) = 0;
+CNTrej = groupsummary(CNTrej,{'sfc_upp_factor','plane'},{'sum'},{'GroupCount'});
+
+fig = fig16x12;
+for i_p = 1:Npl
+    ind = CNTrej.plane==planes{i_p};
+    plot(CNTrej.sfc_upp_factor(ind),CNTrej.sum_GroupCount(ind),'-o')
+end
+legend(planes,'Location','best')
+xlabel('$F$ sfc','Interpreter','latex')
+ylabel('Rejected segments','Interpreter','latex')
+print(fig,[plotpath_sum,filesep,'rej_tot'],pfrm,pres)
 
 
 
 %% Bulk ratios for each fitting range
-
 
 for i_p = 1:Npl 
     plane = planes{i_p};

@@ -44,12 +44,27 @@
 % doi.org/10.26023/KP56-KFJS-VC07 
 % https://data.eol.ucar.edu/dataset/111.033
 %
-% MYDATAPATH/TO-POST/cloud_tops.txt
+% MYDATAPATH/TO-POST/PVM_100Hz
+%
+% Gerber scientific (GSI) 100-hz PVM - netCDF format
+% doi.org/10.26023/W2HT-F1E5-C50E
+% https://data.eol.ucar.edu/dataset/111.011
+%
+% MYDATAPATH/TO-POST/Carman2012_table.txt
 %
 % Table 1 from Carman, J. K., Rossiter, D. L., Khelif, D., Jonsson, H. H.,
 % Faloona, I. C., and Chuang, P. Y.: Observational constraints on entrainment
 % and the entrainment interface layer in stratocumulus, Atmos. Chem. Phys.,
 % 12, 11135–11152, https://doi.org/10.5194/acp-12-11135-2012, 2012. 
+% (as tab-delimited text file). Can be copied from the AUX_DATA folder in
+% the code repository.
+%
+% MYDATAPATH/TO-POST/Gerber2013_table.txt
+%
+% Table 1 from Gerber, H., Frick, G., Malinowski, S. P., Jonsson, H.,
+% Khelif, D., and Krueger, S. K.: Entrainment rates and microphysics in POST
+% stratocumulus, Journal of Geophysical Research Atmospheres, 118, 12,094–12,109,
+% https://doi.org/10.1002/JGRD.50878, 2013.
 % (as tab-delimited text file). Can be copied from the AUX_DATA folder in
 % the code repository.
 %
@@ -181,10 +196,12 @@ for i_p = 1:Npl
     elseif strcmp(plane,'TO-POST')
         
         % Load turbulence data, variables: WX, WY, WZ, RADALT, TAS, GTRK
-        % Load cloud bas/top height table
+        % Load LWC data, variables: LWC3
+        % Load cloud base/top height table
         % Apply segmentation algorithm to mark horizontal segments
-        % Cut segments out of turbulence data
+        % Cut segments out of turbulence and LWC data
         % Rotate eastward/northward WX, WY to longitudinal/lateral UX, VY
+        % Calculate cloud fraction in segments from LWC
         % Compute mean values
         % Classify segments into levels and select: cloud-top, cloud-base, sub-cloud, near-surface
         [TURB,MOM] = load_post_all(datapath);
@@ -227,10 +244,6 @@ for i_p = 1:Npl
             [SFC{i_s}.r, SFC{i_s}.(var)] = logmean( rawSFC{i_s}.r, rawSFC{i_s}.(var), ...
                 sfc_calc_points, sfc_calc_range );
             
-%             [rv_fit, sfc_fit] = logmean( rawSFC{i_s}.r, rawSFC{i_s}.(var), ...
-%                 sfc_fit_points, sfc_fit_range );
-%             [MOM.(['off_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = ...
-%                 fit_uni( rv_fit, sfc_fit, 2/3 );
             [MOM.(['off_sfc_',var])(i_s),MOM.(['slp_sfc_',var])(i_s),es] = ...
                 fit_sfc( detrend(TURB(i_s).(var)), dr, sfc_fit_range, ...
                 'Method','logmean', 'FitPoints',sfc_fit_points );
@@ -272,10 +285,6 @@ for i_p = 1:Npl
                 psd_calc_points, 2*pi./psd_calc_range([2 1]) );
             PSD{i_s}.r = 2*pi./PSD{i_s}.k;
             
-%             [kv_fit, psd_fit] = logmean( rawPSD{i_s}.k, rawPSD{i_s}.(var), ...
-%                 psd_fit_points, 2*pi./psd_fit_range([2 1]) );
-%             [MOM.(['off_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),es] = ...
-%                 fit_uni( kv_fit, psd_fit, -5/3 );
             [MOM.(['off_psd_',var])(i_s),MOM.(['slp_psd_',var])(i_s),es] = ...
                 fit_psd( detrend(TURB(i_s).(var)), dr, psd_fit_range, ...
                 'Method','logmean', 'FitPoints',psd_fit_points, ...
